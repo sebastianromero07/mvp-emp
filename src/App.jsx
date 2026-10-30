@@ -98,7 +98,34 @@ export default function App() {
   const handleResetDemo = () => {
     resetToSeedData();
     setSelectedPocketId(null);
+    scrollToTop();
     showToast('Datos semilla restaurados para demostración.', 'info');
+  };
+
+  // Scroll smoothly to top of current screen
+  const scrollToTop = () => {
+    try {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      if (document.documentElement) {
+        document.documentElement.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+      if (document.body) {
+        document.body.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    } catch {
+      window.scrollTo(0, 0);
+    }
+  };
+
+  const handleSelectTab = (tab) => {
+    setActiveTab(tab);
+    if (tab === 'billetera') {
+      setSelectedPocketId(null);
+    }
+    scrollToTop();
+    requestAnimationFrame(() => {
+      scrollToTop();
+    });
   };
 
   // Quick helper to test the critical rule in 1 click
@@ -113,17 +140,24 @@ export default function App() {
   };
 
   const isNetPositive = summary.totalAvailable >= 0;
+  const isMainScreen = activeTab === 'billetera' && !selectedPocketId;
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-[#070a12] text-slate-900 dark:text-slate-100 flex flex-col selection:bg-indigo-500 selection:text-white transition-colors duration-200 antialiased overflow-x-hidden">
-      {/* Top Header */}
-      <Header
-        onOpenConfig={() => setIsConfigOpen(true)}
-        onResetDemo={handleResetDemo}
-      />
+      {/* Top Header - Solo fijo para la pantalla principal del medio (Billetera) */}
+      {isMainScreen && (
+        <Header
+          onOpenConfig={() => setIsConfigOpen(true)}
+          onResetDemo={handleResetDemo}
+        />
+      )}
 
-      {/* Main Container - Optimized for mobile & desktop */}
-      <main className="flex-1 w-full max-w-lg mx-auto px-3.5 sm:px-4 py-3.5 pb-24 space-y-4">
+      {/* Main Container - Optimized for mobile & desktop with dynamic safe padding */}
+      <main className={`flex-1 w-full max-w-lg mx-auto px-3.5 sm:px-4 pb-24 space-y-4 ${
+        isMainScreen
+          ? 'pt-[calc(max(0.75rem,env(safe-area-inset-top,0.75rem))+4.25rem)]'
+          : 'pt-[max(1rem,env(safe-area-inset-top,1rem))]'
+      }`}>
 
         {/* ========================================================= */}
         {/* TAB 1: BILLETERA (Dashboard 4 Bolsillos O Espacio Propio)  */}
@@ -134,7 +168,10 @@ export default function App() {
               category={CATEGORIES.find((c) => c.id === selectedPocketId) || CATEGORIES[0]}
               stats={pocketStats[selectedPocketId] || pocketStats.alimentacion}
               transactions={transactions}
-              onBack={() => setSelectedPocketId(null)}
+              onBack={() => {
+                setSelectedPocketId(null);
+                scrollToTop();
+              }}
               onOpenExpenseModal={(catId) => handleOpenExpenseModal(catId)}
               onDeleteExpense={handleDeleteExpense}
             />
@@ -165,7 +202,7 @@ export default function App() {
 
                 {/* Net Savings badge */}
                 <button
-                  onClick={() => setActiveTab('reporte')}
+                  onClick={() => handleSelectTab('reporte')}
                   className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold border backdrop-blur-md active:scale-95 transition-all ${
                     isNetPositive
                       ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/15 dark:text-emerald-300 dark:border-emerald-500/30'
@@ -212,7 +249,10 @@ export default function App() {
                     <PocketCard
                       key={cat.id}
                       stats={pocketStats[cat.id]}
-                      onSelectPocket={(catId) => setSelectedPocketId(catId)}
+                      onSelectPocket={(catId) => {
+                        setSelectedPocketId(catId);
+                        scrollToTop();
+                      }}
                       onOpenExpenseModal={(catId) => handleOpenExpenseModal(catId)}
                     />
                   ))}
@@ -265,12 +305,7 @@ export default function App() {
       {/* Fixed Bottom Navigation Footer */}
       <NavigationFooter
         activeTab={activeTab}
-        onSelectTab={(tab) => {
-          setActiveTab(tab);
-          if (tab === 'billetera') {
-            setSelectedPocketId(null);
-          }
-        }}
+        onSelectTab={handleSelectTab}
         transactionCount={transactions.length}
         goalCount={goals.length}
       />

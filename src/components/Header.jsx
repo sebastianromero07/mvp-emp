@@ -6,7 +6,7 @@ export function Header({ onOpenConfig, onResetDemo }) {
   const { theme, toggleTheme } = useTheme();
 
   return (
-    <header className="sticky top-0 z-30 pt-3 pb-3 px-3.5 sm:px-4 bg-white/90 dark:bg-slate-950/85 backdrop-blur-md border-b border-slate-200/90 dark:border-slate-800/80 transition-colors shadow-xs dark:shadow-none">
+    <header className="fixed top-0 left-0 right-0 z-40 bg-white/95 dark:bg-[#070a12]/95 backdrop-blur-xl border-b border-slate-200/90 dark:border-slate-800/80 transition-colors shadow-xs dark:shadow-none pt-[max(0.75rem,env(safe-area-inset-top,0.75rem))] pb-3 px-3.5 sm:px-4">
       <div className="flex items-center justify-between max-w-lg mx-auto">
         <div className="flex items-center gap-2.5">
           <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-gradient-to-tr from-indigo-600 via-blue-600 to-cyan-400 p-0.5 shadow-md shadow-indigo-500/20 flex items-center justify-center shrink-0">
@@ -18,9 +18,6 @@ export function Header({ onOpenConfig, onResetDemo }) {
             <h1 className="font-extrabold text-base sm:text-lg tracking-tight text-slate-900 dark:text-white">
               Bolsillos
             </h1>
-            <span className="text-[10px] font-bold tracking-wider uppercase px-1.5 py-0.5 rounded-full bg-indigo-50 dark:bg-indigo-500/15 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-500/30">
-              MVP
-            </span>
           </div>
         </div>
 

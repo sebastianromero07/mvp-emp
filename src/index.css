@@ -63,9 +63,13 @@ html.light body {
   box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.3);
 }
 
-/* Safe area support for iOS home bar and notch */
+/* Safe area support for iOS home bar, notch and dynamic island */
 .safe-area-bottom {
   padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.safe-area-top {
+  padding-top: env(safe-area-inset-top, 0px);
 }
 
 /* Mobile tap improvements */
