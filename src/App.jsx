@@ -11,7 +11,7 @@ import { BudgetModal } from './components/BudgetModal';
 import { QuickExpenseModal } from './components/QuickExpenseModal';
 import { Toast } from './components/Toast';
 import { formatCurrency } from './utils/formatters';
-import { AlertTriangle, TrendingUp, TrendingDown, PiggyBank, Plus } from 'lucide-react';
+import { AlertTriangle, PiggyBank, Plus } from 'lucide-react';
 
 export default function App() {
   const {
@@ -139,7 +139,6 @@ export default function App() {
     showToast('Sobregiro simulado en Alimentación para verificar alerta roja.', 'error');
   };
 
-  const isNetPositive = summary.totalAvailable >= 0;
   const isMainScreen = activeTab === 'billetera' && !selectedPocketId;
 
   return (
@@ -179,7 +178,7 @@ export default function App() {
             <div className="space-y-4 animate-fade-in">
               {/* Compact Balance Ribbon */}
               <div className="rounded-2xl glass-card p-3.5 border border-slate-200/90 dark:border-slate-800/80 shadow-xs dark:shadow-none flex items-center justify-between">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2.5">
                   <div className="w-8 h-8 rounded-xl bg-indigo-100 text-indigo-600 dark:bg-indigo-500/15 dark:text-indigo-400 flex items-center justify-center shrink-0">
                     <PiggyBank className="w-4 h-4" />
                   </div>
@@ -189,36 +188,16 @@ export default function App() {
                     </span>
                     <div className="flex items-baseline gap-1.5">
                       <span className={`text-xl sm:text-2xl font-extrabold font-mono tracking-tight ${
-                        summary.totalAvailable < 0 ? 'text-rose-600 dark:text-rose-400' : 'text-slate-900 dark:text-white'
+                        summary.totalAvailable < 0 ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400'
                       }`}>
                         {formatCurrency(summary.totalAvailable)}
                       </span>
                       <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">
-                        / {formatCurrency(summary.totalBudget)}
+                        / <span className="text-emerald-600 dark:text-emerald-400 font-semibold">{formatCurrency(summary.totalBudget)}</span>
                       </span>
                     </div>
                   </div>
                 </div>
-
-                {/* Net Savings badge */}
-                <button
-                  onClick={() => handleSelectTab('reporte')}
-                  className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold border backdrop-blur-md active:scale-95 transition-all ${
-                    isNetPositive
-                      ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/15 dark:text-emerald-300 dark:border-emerald-500/30'
-                      : 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-500/20 dark:text-rose-300 dark:border-rose-500/30'
-                  }`}
-                  title="Ver desglose en Reporte"
-                >
-                  {isNetPositive ? (
-                    <TrendingUp className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
-                  ) : (
-                    <TrendingDown className="w-3 h-3 text-rose-600 dark:text-rose-400" />
-                  )}
-                  <span>
-                    Ahorro: {isNetPositive ? '+' : ''}{formatCurrency(summary.totalAvailable)}
-                  </span>
-                </button>
               </div>
 
               {/* 2. Pocket Cards in 2x2 GRID */}
@@ -228,9 +207,6 @@ export default function App() {
                     <h2 className="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider">
                       Tus Espacios Estancos
                     </h2>
-                    <span className="text-[9px] font-semibold px-1.5 py-0.2 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700">
-                      4 bolsillos
-                    </span>
                   </div>
                   
                   <button

@@ -149,7 +149,7 @@ export function PocketDetailView({
               Disponible
             </span>
             <span className={`text-sm sm:text-base font-extrabold font-mono ${
-              isOutOfFunds ? 'text-rose-600 dark:text-rose-400' : 'text-slate-900 dark:text-white'
+              isOutOfFunds ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400'
             }`}>
               {formatCurrency(available)}
             </span>
@@ -159,7 +159,7 @@ export function PocketDetailView({
             <span className="text-[10px] uppercase font-semibold text-slate-500 dark:text-slate-400 block mb-0.5">
               Presupuesto
             </span>
-            <span className="text-sm sm:text-base font-extrabold font-mono text-slate-800 dark:text-slate-200">
+            <span className="text-sm sm:text-base font-extrabold font-mono text-emerald-600 dark:text-emerald-400">
               {formatCurrency(budget)}
             </span>
           </div>
@@ -178,7 +178,9 @@ export function PocketDetailView({
         <div>
           <div className="flex justify-between items-center text-[10px] text-slate-500 dark:text-slate-400 font-medium mb-1">
             <span>Uso del presupuesto asignado</span>
-            <span className="font-mono">{formatCurrency(spent)} de {formatCurrency(budget)}</span>
+            <span className="font-mono">
+              <span className="text-rose-600 dark:text-rose-400 font-semibold">{formatCurrency(spent)}</span> de <span className="text-emerald-600 dark:text-emerald-400 font-semibold">{formatCurrency(budget)}</span>
+            </span>
           </div>
           <div className="w-full h-2.5 rounded-full bg-slate-100 dark:bg-slate-950 overflow-hidden p-0.5 border border-slate-200 dark:border-slate-800">
             <div

@@ -62,7 +62,7 @@ export function PocketCard({ stats, onSelectPocket, onOpenExpenseModal }) {
               {category.name}
             </h3>
             <span className="text-[10px] text-slate-500 dark:text-slate-400 truncate block font-medium">
-              Ppto: {formatCurrency(budget)}
+              Ppto: <span className="text-emerald-600 dark:text-emerald-400 font-semibold">{formatCurrency(budget)}</span>
             </span>
           </div>
         </div>
@@ -94,12 +94,12 @@ export function PocketCard({ stats, onSelectPocket, onOpenExpenseModal }) {
         </div>
         <div className="flex flex-col xs:flex-row xs:items-baseline justify-between gap-0.5 mt-0.5">
           <span className={`text-base sm:text-xl font-extrabold tracking-tight font-mono truncate ${
-            isOutOfFunds ? 'text-rose-600 dark:text-rose-400' : 'text-slate-900 dark:text-white'
+            isOutOfFunds ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400'
           }`}>
             {formatCurrency(available)}
           </span>
           <span className="text-[10px] text-slate-500 dark:text-slate-400 truncate">
-            Gasto: <span className="text-slate-800 dark:text-slate-200 font-mono font-semibold">{formatCurrency(spent)}</span>
+            Gasto: <span className="text-rose-600 dark:text-rose-400 font-mono font-semibold">{formatCurrency(spent)}</span>
           </span>
         </div>
 

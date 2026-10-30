@@ -164,7 +164,7 @@ export function ReportView({ summary, pocketStats, transactions = [] }) {
             <span className="text-[10px] uppercase font-semibold text-slate-500 dark:text-slate-400 block mb-0.5">
               Gastado
             </span>
-            <span className="text-sm sm:text-base font-extrabold font-mono text-slate-900 dark:text-white">
+            <span className="text-sm sm:text-base font-extrabold font-mono text-rose-600 dark:text-rose-400">
               {formatCurrency(totalSpent)}
             </span>
           </div>
@@ -184,7 +184,7 @@ export function ReportView({ summary, pocketStats, transactions = [] }) {
             <span className="text-[10px] uppercase font-semibold text-slate-500 dark:text-slate-400 block mb-0.5">
               Ppto Total
             </span>
-            <span className="text-sm sm:text-base font-extrabold font-mono text-slate-700 dark:text-slate-300">
+            <span className="text-sm sm:text-base font-extrabold font-mono text-emerald-600 dark:text-emerald-400">
               {formatCurrency(totalBudget)}
             </span>
           </div>
@@ -410,13 +410,13 @@ export function ReportView({ summary, pocketStats, transactions = [] }) {
                       {cat.name}
                     </h4>
                     <span className="text-[10px] text-slate-400">
-                      Ppto: {formatCurrency(cat.budget)}
+                      Ppto: <span className="text-emerald-600 dark:text-emerald-400 font-medium">{formatCurrency(cat.budget)}</span>
                     </span>
                   </div>
                 </div>
 
                 <div className="text-right">
-                  <span className="text-xs font-mono font-extrabold text-slate-900 dark:text-white block">
+                  <span className="text-xs font-mono font-extrabold text-rose-600 dark:text-rose-400 block">
                     {formatCurrency(cat.spent)}
                   </span>
                   <span className={`text-[10px] font-bold font-mono ${
@@ -447,7 +447,7 @@ export function ReportView({ summary, pocketStats, transactions = [] }) {
 
               {/* Footer info row */}
               <div className="flex items-center justify-between text-[10px] text-slate-500 dark:text-slate-400 pt-0.5">
-                <span>Disponible: <strong className={cat.isOutOfFunds ? 'text-rose-600 dark:text-rose-400' : 'text-slate-800 dark:text-slate-200'}>{formatCurrency(cat.available)}</strong></span>
+                <span>Disponible: <strong className={cat.isOutOfFunds ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400'}>{formatCurrency(cat.available)}</strong></span>
                 <span>{cat.percentOfTotal.toFixed(0)}% del gasto global</span>
               </div>
             </div>
