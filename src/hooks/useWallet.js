@@ -10,31 +10,47 @@ const STORAGE_KEYS = {
 const INITIAL_GOALS = [
   {
     id: 'goal-1',
-    title: 'Comprar un carro',
-    targetAmount: 8500,
-    currentAmount: 3200,
+    title: 'Comprar Auto',
+    subtitle: 'Ahorro para vehículo nuevo',
+    targetAmount: 12500,
+    currentAmount: 4200,
     icon: 'car',
+    term: 'Mediano plazo',
+    imageUrl: 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=800&q=80',
+    badge: 'META ACTIVA',
   },
   {
     id: 'goal-2',
-    title: 'Mensualidad Universidad',
-    targetAmount: 1200,
-    currentAmount: 800,
-    icon: 'study',
+    title: 'Fondo de Emergencia',
+    subtitle: 'Seguridad y respaldo',
+    targetAmount: 3000,
+    currentAmount: 2250,
+    icon: 'emergency',
+    term: 'Corto plazo',
+    imageUrl: 'https://images.unsplash.com/photo-1515694346937-94d85e41e6f0?auto=format&fit=crop&w=800&q=80',
+    badge: '75% COMPLETADO',
   },
   {
     id: 'goal-3',
-    title: 'Viaje vacaciones',
-    targetAmount: 1500,
-    currentAmount: 450,
+    title: 'Viaje a Japón',
+    subtitle: 'Vacaciones soñadas',
+    targetAmount: 2500,
+    currentAmount: 1000,
     icon: 'trip',
+    term: 'Corto plazo',
+    imageUrl: 'https://images.unsplash.com/photo-1436491865332-7a61a109cc05?auto=format&fit=crop&w=800&q=80',
+    badge: '40% COMPLETADO',
   },
   {
     id: 'goal-4',
-    title: 'Fiesta de Cumpleaños',
-    targetAmount: 500,
-    currentAmount: 350,
-    icon: 'birthday',
+    title: 'Maestría / Universidad',
+    subtitle: 'MBA y desarrollo profesional',
+    targetAmount: 6000,
+    currentAmount: 1500,
+    icon: 'study',
+    term: 'Mediano plazo',
+    imageUrl: 'https://images.unsplash.com/photo-1497633762265-9d179a990aa6?auto=format&fit=crop&w=800&q=80',
+    badge: 'PLANIFICACIÓN',
   },
 ];
 
@@ -62,7 +78,10 @@ export function useWallet() {
   const [goals, setGoals] = useState(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEYS.GOALS);
-      if (saved) return JSON.parse(saved);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
     } catch (e) {
       console.error('Error loading goals from localStorage', e);
     }
@@ -97,13 +116,27 @@ export function useWallet() {
   }, [goals]);
 
   // Add goal
-  const addGoal = ({ title, targetAmount, currentAmount = 0, icon = 'car', targetDate = null }) => {
+  const addGoal = ({
+    title,
+    subtitle = '',
+    targetAmount,
+    currentAmount = 0,
+    icon = 'car',
+    term = 'Mediano plazo',
+    imageUrl = '',
+    badge = 'EN CURSO',
+    targetDate = null,
+  }) => {
     const newGoal = {
       id: `goal-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
       title,
+      subtitle: subtitle || 'Objetivo de ahorro personal',
       targetAmount: Number(targetAmount),
-      currentAmount: Number(currentAmount),
+      currentAmount: Number(currentAmount) || 0,
       icon,
+      term: term || 'Mediano plazo',
+      imageUrl: imageUrl || '',
+      badge: badge || 'EN CURSO',
       targetDate,
       createdAt: new Date().toISOString(),
     };

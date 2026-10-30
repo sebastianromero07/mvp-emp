@@ -1,24 +1,133 @@
 import React, { useState } from 'react';
-import { Target, Plus, Car, GraduationCap, Plane, Gift, Home, Laptop, Heart, Trash2, CheckCircle2 } from 'lucide-react';
+import {
+  Target,
+  Plus,
+  Car,
+  GraduationCap,
+  Plane,
+  Gift,
+  Home,
+  Laptop,
+  Heart,
+  Trash2,
+  CheckCircle2,
+  Sparkles,
+  ShieldCheck,
+  TrendingUp,
+  X,
+  Compass
+} from 'lucide-react';
 import { formatCurrency } from '../utils/formatters';
 
-const PRESET_ICONS = [
-  { id: 'car', icon: Car, label: 'Carro' },
-  { id: 'study', icon: GraduationCap, label: 'Universidad' },
-  { id: 'trip', icon: Plane, label: 'Viaje' },
-  { id: 'birthday', icon: Gift, label: 'Cumpleaños' },
-  { id: 'home', icon: Home, label: 'Hogar' },
-  { id: 'tech', icon: Laptop, label: 'Tecnología' },
-  { id: 'lifestyle', icon: Heart, label: 'Sueño' },
+// Predefined Goal Templates with representative background images (matching the user's reference)
+export const PREDEFINED_GOALS = [
+  {
+    id: 'car',
+    title: 'Comprar Auto',
+    subtitle: 'Ahorro para vehículo nuevo',
+    term: 'Mediano plazo',
+    defaultTarget: 15000,
+    imageUrl: 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=800&q=80',
+    iconName: 'Car',
+    badge: 'META ACTIVA',
+  },
+  {
+    id: 'trip',
+    title: 'Viaje / Vacaciones',
+    subtitle: 'Vuelo y estadía soñada',
+    term: 'Corto plazo',
+    defaultTarget: 2500,
+    imageUrl: 'https://images.unsplash.com/photo-1436491865332-7a61a109cc05?auto=format&fit=crop&w=800&q=80',
+    iconName: 'Plane',
+    badge: 'EN CURSO',
+  },
+  {
+    id: 'study',
+    title: 'Universidad / Maestría',
+    subtitle: 'MBA y desarrollo profesional',
+    term: 'Mediano plazo',
+    defaultTarget: 6000,
+    imageUrl: 'https://images.unsplash.com/photo-1497633762265-9d179a990aa6?auto=format&fit=crop&w=800&q=80',
+    iconName: 'GraduationCap',
+    badge: 'PLANIFICACIÓN',
+  },
+  {
+    id: 'emergency',
+    title: 'Fondo de Emergencia',
+    subtitle: 'Colchón financiero seguro',
+    term: 'Corto plazo',
+    defaultTarget: 3000,
+    imageUrl: 'https://images.unsplash.com/photo-1515694346937-94d85e41e6f0?auto=format&fit=crop&w=800&q=80',
+    iconName: 'ShieldCheck',
+    badge: 'PRIORITARIO',
+  },
+  {
+    id: 'home',
+    title: 'Hogar / Casa Propia',
+    subtitle: 'Inicial o remodelación',
+    term: 'Largo plazo',
+    defaultTarget: 25000,
+    imageUrl: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=800&q=80',
+    iconName: 'Home',
+    badge: 'PLANIFICACIÓN',
+  },
+  {
+    id: 'tech',
+    title: 'Laptop / Tecnología Pro',
+    subtitle: 'Equipo de trabajo o setup',
+    term: 'Corto plazo',
+    defaultTarget: 1800,
+    imageUrl: 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&w=800&q=80',
+    iconName: 'Laptop',
+    badge: 'EN CURSO',
+  },
+  {
+    id: 'birthday',
+    title: 'Cumpleaños / Celebración',
+    subtitle: 'Fiesta especial con amigos y familia',
+    term: 'Corto plazo',
+    defaultTarget: 600,
+    imageUrl: 'https://images.unsplash.com/photo-1513151233558-d860c5398176?auto=format&fit=crop&w=800&q=80',
+    iconName: 'Gift',
+    badge: 'EN CURSO',
+  },
+  {
+    id: 'custom',
+    title: 'Meta Personalizada',
+    subtitle: 'Define tu propio objetivo a medida',
+    term: 'Personalizado',
+    defaultTarget: 1000,
+    imageUrl: 'https://images.unsplash.com/photo-1579621970563-ebec7560ff3e?auto=format&fit=crop&w=800&q=80',
+    iconName: 'Target',
+    badge: 'NUEVO',
+  },
 ];
+
+const ICONS_MAP = {
+  Car,
+  Plane,
+  GraduationCap,
+  ShieldCheck,
+  Home,
+  Laptop,
+  Gift,
+  Target,
+  car: Car,
+  trip: Plane,
+  study: GraduationCap,
+  emergency: ShieldCheck,
+  home: Home,
+  tech: Laptop,
+  birthday: Gift,
+};
 
 export function GoalsView({ goals = [], onAddGoal, onUpdateSaved, onDeleteGoal }) {
   const [isCreating, setIsCreating] = useState(false);
-  const [title, setTitle] = useState('');
+  const [selectedTemplate, setSelectedTemplate] = useState(PREDEFINED_GOALS[0]);
+  const [customTitle, setCustomTitle] = useState('');
   const [targetAmount, setTargetAmount] = useState('');
-  const [currentAmount, setCurrentAmount] = useState('');
-  const [selectedIcon, setSelectedIcon] = useState('car');
-  const [targetDate, setTargetDate] = useState('');
+  const [initialAmount, setInitialAmount] = useState('');
+  const [selectedTerm, setSelectedTerm] = useState('Todas'); // 'Todas' | 'Corto plazo' | 'Mediano plazo' | 'Largo plazo'
 
   // Deposit modal state
   const [depositGoalId, setDepositGoalId] = useState(null);
@@ -28,23 +137,41 @@ export function GoalsView({ goals = [], onAddGoal, onUpdateSaved, onDeleteGoal }
   const totalTarget = goals.reduce((acc, g) => acc + (Number(g.targetAmount) || 0), 0);
   const totalProgress = totalTarget > 0 ? (totalSaved / totalTarget) * 100 : 0;
 
+  // Filter goals by horizon
+  const filteredGoals = goals.filter((g) => {
+    if (selectedTerm === 'Todas') return true;
+    return (g.term || 'Mediano plazo') === selectedTerm;
+  });
+
+  const handleSelectTemplate = (template) => {
+    setSelectedTemplate(template);
+    setCustomTitle(template.title);
+    if (!targetAmount) {
+      setTargetAmount(template.defaultTarget.toString());
+    }
+  };
+
   const handleCreate = (e) => {
     e.preventDefault();
     const target = parseFloat(targetAmount);
-    if (!title.trim() || !target || target <= 0) return;
+    if (!target || target <= 0) return;
+
+    const titleToUse = (customTitle || selectedTemplate.title).trim();
 
     onAddGoal({
-      title: title.trim(),
+      title: titleToUse,
+      subtitle: selectedTemplate.subtitle,
       targetAmount: target,
-      currentAmount: parseFloat(currentAmount) || 0,
-      icon: selectedIcon,
-      targetDate: targetDate || null,
+      currentAmount: parseFloat(initialAmount) || 0,
+      icon: selectedTemplate.iconName || 'Target',
+      term: selectedTemplate.term,
+      imageUrl: selectedTemplate.imageUrl,
+      badge: selectedTemplate.badge,
     });
 
-    setTitle('');
     setTargetAmount('');
-    setCurrentAmount('');
-    setTargetDate('');
+    setInitialAmount('');
+    setCustomTitle('');
     setIsCreating(false);
   };
 
@@ -58,274 +185,352 @@ export function GoalsView({ goals = [], onAddGoal, onUpdateSaved, onDeleteGoal }
     setDepositGoalId(null);
   };
 
-  const getIconComponent = (iconId) => {
-    const item = PRESET_ICONS.find((p) => p.id === iconId);
-    const IconComp = item ? item.icon : Target;
-    return IconComp;
+  const getGoalImage = (goal) => {
+    if (goal.imageUrl) return goal.imageUrl;
+    // Fallback based on icon
+    const match = PREDEFINED_GOALS.find((p) => p.id === goal.icon || p.iconName === goal.icon);
+    return match ? match.imageUrl : PREDEFINED_GOALS[0].imageUrl;
   };
 
   return (
     <div className="space-y-4 animate-fade-in pb-4">
-      {/* Overview Card */}
-      <div className="rounded-2xl glass-card p-4 border border-slate-800/80 dark:border-slate-800/80 light:border-slate-200">
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-xl bg-violet-500/15 text-violet-400 flex items-center justify-center shrink-0">
-              <Target className="w-4 h-4" />
-            </div>
-            <div>
-              <span className="text-[10px] uppercase tracking-wider text-slate-400 font-semibold block">
-                Tus Metas y Objetivos
-              </span>
-              <div className="flex items-baseline gap-1.5">
-                <span className="text-xl sm:text-2xl font-extrabold font-mono tracking-tight text-white dark:text-white light:text-slate-900">
-                  {formatCurrency(totalSaved)}
-                </span>
-                <span className="text-[10px] text-slate-400">
-                  / {formatCurrency(totalTarget)}
-                </span>
-              </div>
-            </div>
+      {/* Top Vision Header (Inspired by reference design) */}
+      <div className="rounded-3xl glass-card p-5 border border-slate-200/90 dark:border-slate-800/80 shadow-xs dark:shadow-none space-y-3">
+        <div className="flex items-center justify-between">
+          <div>
+            <span className="text-[10px] font-bold tracking-widest uppercase text-emerald-600 dark:text-emerald-400 block mb-0.5">
+              VISIÓN GENERAL
+            </span>
+            <h2 className="text-lg sm:text-xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+              Tu camino financiero
+            </h2>
+            <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mt-0.5">
+              Visualiza y gestiona tus objetivos de ahorro con metas reales y progreso continuo.
+            </p>
           </div>
 
           <button
-            onClick={() => setIsCreating(!isCreating)}
-            className="flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-bold bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-md shadow-violet-600/25 active:scale-95 transition-all"
+            onClick={() => {
+              setIsCreating(!isCreating);
+              if (!isCreating) {
+                handleSelectTemplate(PREDEFINED_GOALS[0]);
+              }
+            }}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-2xl text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white shadow-md shadow-emerald-600/25 active:scale-95 transition-all shrink-0"
           >
-            <Plus className="w-3.5 h-3.5" />
-            <span>Nuevo</span>
+            <Plus className="w-4 h-4" />
+            <span>Nueva Meta</span>
           </button>
         </div>
 
         {/* Global Progress Bar */}
-        <div>
-          <div className="flex justify-between items-center text-[10px] text-slate-400 font-medium mb-1">
-            <span>Progreso Total</span>
-            <span className="font-mono font-bold text-violet-400">{totalProgress.toFixed(1)}%</span>
+        <div className="pt-2 border-t border-slate-100 dark:border-slate-800/80">
+          <div className="flex justify-between items-center text-[10px] text-slate-500 dark:text-slate-400 font-medium mb-1.5">
+            <span className="flex items-center gap-1">
+              <TrendingUp className="w-3 h-3 text-emerald-500" />
+              <span>Ahorro Acumulado Total</span>
+            </span>
+            <span className="font-mono font-bold text-slate-900 dark:text-white">
+              {formatCurrency(totalSaved)} <span className="text-slate-400 font-normal">/ {formatCurrency(totalTarget)}</span>
+            </span>
           </div>
-          <div className="w-full h-2 rounded-full bg-slate-900 dark:bg-slate-950 light:bg-slate-100 overflow-hidden p-0.5 border border-slate-800/60 dark:border-slate-800/60 light:border-slate-200">
+          <div className="w-full h-2 rounded-full bg-slate-100 dark:bg-slate-950 overflow-hidden p-0.5 border border-slate-200 dark:border-slate-800">
             <div
-              className="h-full rounded-full bg-gradient-to-r from-violet-500 to-indigo-500 transition-all duration-500"
+              className="h-full rounded-full bg-gradient-to-r from-emerald-500 via-teal-400 to-cyan-400 transition-all duration-700"
               style={{ width: `${Math.min(100, Math.max(0, totalProgress))}%` }}
             />
           </div>
         </div>
       </div>
 
-      {/* Creation Form Modal/Card */}
+      {/* Horizon Tabs (Corto plazo, Mediano plazo, etc.) */}
+      <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+        {['Todas', 'Corto plazo', 'Mediano plazo', 'Largo plazo'].map((term) => (
+          <button
+            key={term}
+            onClick={() => setSelectedTerm(term)}
+            className={`px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all border active:scale-95 ${
+              selectedTerm === term
+                ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-950 border-slate-900 dark:border-white shadow-xs'
+                : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800'
+            }`}
+          >
+            {term}
+          </button>
+        ))}
+        <span className="ml-auto text-[10px] text-slate-400 font-mono font-semibold">
+          {filteredGoals.length} {filteredGoals.length === 1 ? 'meta' : 'metas'}
+        </span>
+      </div>
+
+      {/* ========================================================= */}
+      {/* CREATION MODAL / DRAWER CON OPCIONES PREDEFINIDAS         */}
+      {/* ========================================================= */}
       {isCreating && (
         <form
           onSubmit={handleCreate}
-          className="rounded-2xl glass-card p-4 border border-violet-500/40 shadow-xl space-y-3 animate-fade-in"
+          className="rounded-3xl glass-card p-5 border border-emerald-500/40 shadow-2xl space-y-4 animate-fade-in"
         >
-          <div className="flex items-center justify-between pb-1 border-b border-slate-800/60 dark:border-slate-800/60 light:border-slate-200">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-200 dark:text-slate-200 light:text-slate-800 flex items-center gap-1.5">
-              <Plus className="w-3.5 h-3.5 text-violet-400" />
-              Crear Nuevo Objetivo
-            </h3>
+          <div className="flex items-center justify-between pb-2 border-b border-slate-200 dark:border-slate-800">
+            <div>
+              <h3 className="text-sm font-extrabold text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-1.5">
+                <Sparkles className="w-4 h-4 text-emerald-500" />
+                Elige tu Objetivo Predefinido
+              </h3>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                Selecciona la opción predefinida y solo ingresa el monto meta.
+              </p>
+            </div>
             <button
               type="button"
               onClick={() => setIsCreating(false)}
-              className="text-xs text-slate-400 hover:text-slate-200"
+              className="p-1 rounded-full text-slate-400 hover:text-slate-700 dark:hover:text-white"
             >
-              Cancelar
+              <X className="w-5 h-5" />
             </button>
           </div>
 
+          {/* Preset templates carousel / grid */}
           <div>
-            <label className="block text-[10px] uppercase font-semibold text-slate-400 mb-1">
-              Nombre de la Meta (ej. Comprar un carro, Viaje a Cancún)
+            <label className="block text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 mb-2">
+              1. Selecciona el Tipo de Meta
             </label>
-            <input
-              type="text"
-              required
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="Ej: Comprar carro, Universidad..."
-              className="w-full bg-slate-950/70 dark:bg-slate-950/70 light:bg-slate-50 border border-slate-700/80 dark:border-slate-700/80 light:border-slate-200 rounded-xl px-3 py-2 text-xs text-white dark:text-white light:text-slate-900 focus:outline-none focus:border-violet-500"
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-2">
-            <div>
-              <label className="block text-[10px] uppercase font-semibold text-slate-400 mb-1">
-                Monto Meta ($)
-              </label>
-              <input
-                type="number"
-                step="any"
-                min="1"
-                required
-                value={targetAmount}
-                onChange={(e) => setTargetAmount(e.target.value)}
-                placeholder="5000"
-                className="w-full bg-slate-950/70 dark:bg-slate-950/70 light:bg-slate-50 border border-slate-700/80 dark:border-slate-700/80 light:border-slate-200 rounded-xl px-3 py-2 text-xs font-mono text-white dark:text-white light:text-slate-900 focus:outline-none focus:border-violet-500"
-              />
-            </div>
-            <div>
-              <label className="block text-[10px] uppercase font-semibold text-slate-400 mb-1">
-                Ahorro Inicial ($)
-              </label>
-              <input
-                type="number"
-                step="any"
-                min="0"
-                value={currentAmount}
-                onChange={(e) => setCurrentAmount(e.target.value)}
-                placeholder="0"
-                className="w-full bg-slate-950/70 dark:bg-slate-950/70 light:bg-slate-50 border border-slate-700/80 dark:border-slate-700/80 light:border-slate-200 rounded-xl px-3 py-2 text-xs font-mono text-white dark:text-white light:text-slate-900 focus:outline-none focus:border-violet-500"
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-[10px] uppercase font-semibold text-slate-400 mb-1.5">
-              Icono de referencia
-            </label>
-            <div className="flex gap-2 overflow-x-auto pb-1">
-              {PRESET_ICONS.map((p) => {
-                const IconComponent = p.icon;
-                const isSelected = selectedIcon === p.id;
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              {PREDEFINED_GOALS.map((template) => {
+                const isSelected = selectedTemplate.id === template.id;
                 return (
                   <button
-                    key={p.id}
+                    key={template.id}
                     type="button"
-                    onClick={() => setSelectedIcon(p.id)}
-                    className={`flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-medium border transition-all shrink-0 ${
+                    onClick={() => handleSelectTemplate(template)}
+                    className={`relative rounded-2xl overflow-hidden text-left border p-2.5 transition-all flex flex-col justify-end h-24 sm:h-28 group ${
                       isSelected
-                        ? 'bg-violet-600 text-white border-violet-500 shadow-sm'
-                        : 'bg-slate-900/60 dark:bg-slate-900/60 light:bg-slate-100 text-slate-400 border-slate-800 dark:border-slate-800 light:border-slate-200'
+                        ? 'border-emerald-500 ring-2 ring-emerald-500/40 shadow-md'
+                        : 'border-slate-200 dark:border-slate-800 opacity-75 hover:opacity-100'
                     }`}
                   >
-                    <IconComponent className="w-3.5 h-3.5" />
-                    <span>{p.label}</span>
+                    {/* Background image preview */}
+                    <img
+                      src={template.imageUrl}
+                      alt={template.title}
+                      className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-black/20" />
+
+                    {/* Content over image */}
+                    <div className="relative z-10">
+                      <span className="text-[9px] font-bold text-emerald-300 uppercase block leading-tight">
+                        {template.term}
+                      </span>
+                      <h4 className="text-xs font-bold text-white leading-tight truncate">
+                        {template.title}
+                      </h4>
+                    </div>
+
+                    {isSelected && (
+                      <div className="absolute top-1.5 right-1.5 w-4 h-4 rounded-full bg-emerald-500 text-white flex items-center justify-center z-10 shadow-sm">
+                        <CheckCircle2 className="w-3 h-3" />
+                      </div>
+                    )}
                   </button>
                 );
               })}
             </div>
           </div>
 
-          <button
-            type="submit"
-            className="w-full py-2.5 rounded-xl font-bold text-xs bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-lg shadow-violet-600/30 active:scale-[0.98] transition-all"
-          >
-            Guardar Objetivo
-          </button>
+          {/* Selected Preview Banner & Amount Input */}
+          <div className="space-y-3 pt-1">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="block text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 mb-1">
+                  Nombre de la Meta (editable)
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={customTitle}
+                  onChange={(e) => setCustomTitle(e.target.value)}
+                  placeholder="Ej. Comprar Auto, Viaje a Japón..."
+                  className="w-full bg-slate-100 dark:bg-slate-950/80 border border-slate-300 dark:border-slate-700/80 rounded-2xl px-3.5 py-2.5 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[10px] uppercase font-bold text-emerald-600 dark:text-emerald-400 mb-1">
+                  * ¿Cuál es tu Monto Objetivo? ($)
+                </label>
+                <input
+                  type="number"
+                  step="any"
+                  min="1"
+                  autoFocus
+                  required
+                  value={targetAmount}
+                  onChange={(e) => setTargetAmount(e.target.value)}
+                  placeholder="Ej. 10000"
+                  className="w-full bg-slate-100 dark:bg-slate-950/80 border border-emerald-500/80 rounded-2xl px-3.5 py-2.5 text-sm font-mono font-extrabold text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/30"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 mb-1">
+                Ahorro Inicial que ya tienes ($ - opcional)
+              </label>
+              <input
+                type="number"
+                step="any"
+                min="0"
+                value={initialAmount}
+                onChange={(e) => setInitialAmount(e.target.value)}
+                placeholder="0"
+                className="w-full bg-slate-100 dark:bg-slate-950/80 border border-slate-300 dark:border-slate-700/80 rounded-2xl px-3.5 py-2 text-xs font-mono text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500"
+              />
+            </div>
+          </div>
+
+          <div className="flex gap-2 pt-2">
+            <button
+              type="button"
+              onClick={() => setIsCreating(false)}
+              className="flex-1 py-3 rounded-2xl text-xs font-semibold bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 transition-colors"
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              className="flex-1 py-3 rounded-2xl text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-600/30 active:scale-[0.98] transition-all flex items-center justify-center gap-1.5"
+            >
+              <CheckCircle2 className="w-4 h-4" />
+              <span>Guardar Meta</span>
+            </button>
+          </div>
         </form>
       )}
 
-      {/* Grid of Goals: like pocket cards (2x2) */}
-      <section aria-label="Lista de Objetivos">
-        <div className="flex items-center justify-between mb-2 px-1">
-          <h2 className="text-xs font-bold text-slate-300 dark:text-slate-300 light:text-slate-700 uppercase tracking-wider">
-            Tus Espacios de Metas
-          </h2>
-          <span className="text-[10px] font-semibold text-slate-400">
-            {goals.length} activos
-          </span>
-        </div>
-
-        {goals.length === 0 ? (
-          <div className="rounded-2xl glass-card p-8 text-center border border-dashed border-slate-800 dark:border-slate-800 light:border-slate-200">
-            <Target className="w-8 h-8 text-slate-500 mx-auto mb-2 opacity-60" />
-            <p className="text-xs text-slate-400 font-medium mb-3">
-              Aún no tienes objetivos creados.
+      {/* ========================================================= */}
+      {/* LISTA DE METAS CON FONDOS REPRESENTATIVOS (TIPO REFERENCIA) */}
+      {/* ========================================================= */}
+      <section aria-label="Objetivos de ahorro">
+        {filteredGoals.length === 0 ? (
+          <div className="rounded-3xl glass-card p-8 text-center border border-dashed border-slate-300 dark:border-slate-800">
+            <Target className="w-10 h-10 text-slate-400 mx-auto mb-2 opacity-50" />
+            <p className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">
+              No tienes metas en este horizonte temporal.
+            </p>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">
+              Crea tu primer objetivo eligiendo una plantilla predefinida.
             </p>
             <button
-              onClick={() => setIsCreating(true)}
-              className="px-3.5 py-1.5 rounded-xl bg-violet-600 text-white text-xs font-bold shadow-md shadow-violet-600/30"
+              onClick={() => {
+                setIsCreating(true);
+                handleSelectTemplate(PREDEFINED_GOALS[0]);
+              }}
+              className="px-4 py-2 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-md shadow-emerald-600/30"
             >
-              Crear mi primer objetivo
+              Crear objetivo ahora
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-2 gap-2 sm:gap-3">
-            {goals.map((goal) => {
-              const IconComp = getIconComponent(goal.icon);
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+            {filteredGoals.map((goal) => {
               const progress = goal.targetAmount > 0 ? (goal.currentAmount / goal.targetAmount) * 100 : 0;
               const isCompleted = goal.currentAmount >= goal.targetAmount;
+              const bgImage = getGoalImage(goal);
+              const IconComp = ICONS_MAP[goal.icon] || Target;
 
               return (
                 <div
                   key={goal.id}
-                  className={`rounded-2xl p-3 sm:p-3.5 border transition-all flex flex-col justify-between glass-card relative group ${
-                    isCompleted
-                      ? 'border-emerald-500/50 dark:border-emerald-500/50 bg-emerald-950/20'
-                      : 'border-slate-800/80 dark:border-slate-800/80 light:border-slate-200'
-                  }`}
+                  className="relative rounded-3xl overflow-hidden border border-slate-200 dark:border-slate-800 shadow-md group transition-all duration-200 flex flex-col justify-between min-h-[190px] sm:min-h-[210px]"
                 >
-                  <div>
-                    {/* Header: Icon + Title + Delete */}
-                    <div className="flex items-start justify-between gap-1 mb-2">
-                      <div className="flex items-center gap-2 min-w-0">
-                        <div className={`w-7 h-7 sm:w-8 sm:h-8 rounded-xl flex items-center justify-center shrink-0 ${
-                          isCompleted ? 'bg-emerald-500/20 text-emerald-400' : 'bg-violet-500/15 text-violet-400'
-                        }`}>
-                          <IconComp className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                        </div>
-                        <div className="min-w-0">
-                          <h4 className="font-bold text-xs sm:text-sm text-white dark:text-white light:text-slate-900 truncate leading-tight">
-                            {goal.title}
-                          </h4>
-                          <span className="text-[9px] text-slate-400 truncate block">
-                            Meta: {formatCurrency(goal.targetAmount)}
-                          </span>
-                        </div>
-                      </div>
+                  {/* Background Image with Dark Vignette Gradient */}
+                  <img
+                    src={bgImage}
+                    alt={goal.title}
+                    className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    loading="lazy"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/70 to-slate-950/30" />
 
-                      <button
-                        onClick={() => onDeleteGoal(goal.id)}
-                        title="Eliminar objetivo"
-                        className="text-slate-500 hover:text-rose-400 transition-colors p-1"
-                      >
-                        <Trash2 className="w-3 h-3" />
-                      </button>
+                  {/* Card Content Top: Badge and Delete */}
+                  <div className="relative z-10 p-4 flex items-start justify-between">
+                    <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider backdrop-blur-md border shadow-xs ${
+                      isCompleted
+                        ? 'bg-emerald-500/90 text-white border-emerald-400'
+                        : 'bg-slate-900/80 text-emerald-400 border-emerald-500/30'
+                    }`}>
+                      {isCompleted ? (
+                        <>
+                          <CheckCircle2 className="w-3 h-3" />
+                          <span>Completado</span>
+                        </>
+                      ) : (
+                        <span>{progress.toFixed(0)}% Completado</span>
+                      )}
+                    </span>
+
+                    <button
+                      onClick={() => onDeleteGoal(goal.id)}
+                      title="Eliminar meta"
+                      className="p-1.5 rounded-full bg-slate-900/60 hover:bg-rose-950 text-slate-300 hover:text-rose-400 border border-white/10 transition-colors backdrop-blur-md"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+
+                  {/* Card Content Bottom: Title, Progress Bar, Numbers & Deposit Action */}
+                  <div className="relative z-10 p-4 pt-0 space-y-2.5">
+                    <div>
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-slate-300/80 block">
+                        {goal.term || 'Mediano plazo'}
+                      </span>
+                      <h3 className="text-base sm:text-lg font-extrabold text-white tracking-tight drop-shadow-md truncate">
+                        {goal.title}
+                      </h3>
+                      {goal.subtitle && (
+                        <p className="text-[11px] text-slate-300 truncate">
+                          {goal.subtitle}
+                        </p>
+                      )}
                     </div>
 
-                    {/* Progress details */}
-                    <div className="mb-2">
-                      <div className="text-[9px] font-medium text-slate-400 uppercase tracking-wider">
-                        Ahorrado
-                      </div>
-                      <div className="flex items-baseline justify-between mt-0.5">
-                        <span className="text-sm sm:text-base font-extrabold font-mono text-white dark:text-white light:text-slate-900">
-                          {formatCurrency(goal.currentAmount)}
-                        </span>
-                        <span className={`text-[10px] font-bold font-mono ${
-                          isCompleted ? 'text-emerald-400' : 'text-violet-400'
-                        }`}>
-                          {progress.toFixed(0)}%
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Bar */}
-                    <div className="w-full h-1.5 rounded-full bg-slate-900 dark:bg-slate-950 light:bg-slate-200 overflow-hidden mb-3">
+                    {/* Progress Bar */}
+                    <div className="w-full h-2 rounded-full bg-black/50 backdrop-blur-md overflow-hidden p-0.5 border border-white/20">
                       <div
-                        className={`h-full rounded-full transition-all duration-300 ${
+                        className={`h-full rounded-full transition-all duration-700 ease-out ${
                           isCompleted
                             ? 'bg-emerald-400'
-                            : 'bg-gradient-to-r from-violet-500 to-indigo-400'
+                            : 'bg-gradient-to-r from-emerald-400 via-teal-400 to-cyan-300'
                         }`}
                         style={{ width: `${Math.min(100, Math.max(0, progress))}%` }}
                       />
                     </div>
-                  </div>
 
-                  {/* Action button: add funds */}
-                  <div className="pt-2 border-t border-slate-800/60 dark:border-slate-800/60 light:border-slate-200 flex items-center justify-between">
-                    {isCompleted ? (
-                      <span className="text-[10px] font-bold text-emerald-400 flex items-center gap-1">
-                        <CheckCircle2 className="w-3 h-3" /> ¡Completado!
-                      </span>
-                    ) : (
-                      <button
-                        onClick={() => setDepositGoalId(goal.id)}
-                        className="w-full py-1 px-2 rounded-lg bg-violet-600/20 hover:bg-violet-600 text-violet-300 hover:text-white text-[10px] font-bold transition-all text-center border border-violet-500/30"
-                      >
-                        + Aportar ahorro
-                      </button>
-                    )}
+                    {/* Numbers and Action Button */}
+                    <div className="flex items-center justify-between pt-1">
+                      <div>
+                        <span className="text-base sm:text-lg font-mono font-extrabold text-white block leading-tight">
+                          {formatCurrency(goal.currentAmount)}
+                        </span>
+                        <span className="text-[10px] text-slate-300 font-mono">
+                          objetivo: {formatCurrency(goal.targetAmount)}
+                        </span>
+                      </div>
+
+                      {isCompleted ? (
+                        <span className="text-[11px] font-bold text-emerald-400 flex items-center gap-1">
+                          <CheckCircle2 className="w-3.5 h-3.5" /> ¡Meta lograda!
+                        </span>
+                      ) : (
+                        <button
+                          onClick={() => setDepositGoalId(goal.id)}
+                          className="px-3 py-1.5 rounded-xl bg-white/95 hover:bg-white text-slate-900 font-bold text-xs shadow-md active:scale-95 transition-all"
+                        >
+                          + Aportar
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
               );
@@ -336,33 +541,62 @@ export function GoalsView({ goals = [], onAddGoal, onUpdateSaved, onDeleteGoal }
 
       {/* Quick Deposit Modal */}
       {depositGoalId && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
-          <div className="w-full max-w-xs rounded-2xl glass-card p-4 border border-slate-700 space-y-3 animate-fade-in shadow-2xl">
-            <h4 className="text-xs font-bold text-white dark:text-white light:text-slate-900 uppercase tracking-wider">
-              Aportar a este Objetivo
-            </h4>
-            <input
-              type="number"
-              step="any"
-              min="0.01"
-              autoFocus
-              value={depositAmount}
-              onChange={(e) => setDepositAmount(e.target.value)}
-              placeholder="Monto a sumar ($)"
-              className="w-full bg-slate-950 dark:bg-slate-950 light:bg-slate-100 border border-slate-700 rounded-xl px-3 py-2 text-sm font-mono text-white dark:text-white light:text-slate-900 focus:outline-none focus:border-violet-500"
-            />
-            <div className="flex gap-2">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-md animate-fade-in">
+          <div className="w-full max-w-xs rounded-3xl bg-white dark:bg-slate-900 p-5 border border-slate-200 dark:border-slate-800 space-y-3.5 shadow-2xl">
+            <div>
+              <h4 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider">
+                Aportar a este Objetivo
+              </h4>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                Suma dinero ahorrado para acercarte a tu meta.
+              </p>
+            </div>
+
+            <div className="relative rounded-2xl bg-slate-100 dark:bg-slate-950 border border-slate-300 dark:border-slate-700">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xl font-bold font-mono text-slate-400">
+                $
+              </span>
+              <input
+                type="number"
+                step="any"
+                min="0.01"
+                autoFocus
+                value={depositAmount}
+                onChange={(e) => setDepositAmount(e.target.value)}
+                placeholder="0.00"
+                className="w-full bg-transparent pl-8 pr-3 py-2.5 text-lg font-mono font-bold text-slate-900 dark:text-white focus:outline-none"
+              />
+            </div>
+
+            {/* Quick chips */}
+            <div className="flex gap-1.5 overflow-x-auto pb-1">
+              {[20, 50, 100, 200].map((v) => (
+                <button
+                  key={v}
+                  type="button"
+                  onClick={() => {
+                    const cur = parseFloat(depositAmount) || 0;
+                    setDepositAmount((cur + v).toString());
+                  }}
+                  className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold font-mono active:scale-95 border border-slate-200 dark:border-slate-700"
+                >
+                  +${v}
+                </button>
+              ))}
+            </div>
+
+            <div className="flex gap-2 pt-1">
               <button
                 type="button"
                 onClick={() => setDepositGoalId(null)}
-                className="flex-1 py-1.5 rounded-xl text-xs font-semibold bg-slate-800 text-slate-300"
+                className="flex-1 py-2 rounded-xl text-xs font-semibold bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 transition-colors"
               >
                 Cancelar
               </button>
               <button
                 type="button"
                 onClick={handleDepositSubmit}
-                className="flex-1 py-1.5 rounded-xl text-xs font-bold bg-violet-600 text-white shadow-md shadow-violet-600/30"
+                className="flex-1 py-2 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white shadow-md shadow-emerald-600/30 active:scale-95 transition-all"
               >
                 Añadir
               </button>
@@ -373,4 +607,3 @@ export function GoalsView({ goals = [], onAddGoal, onUpdateSaved, onDeleteGoal }
     </div>
   );
 }
-

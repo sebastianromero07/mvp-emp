@@ -25,6 +25,10 @@ export function ThemeProvider({ children }) {
       root.classList.add('light');
       root.classList.remove('dark');
     }
+    const themeColorMeta = document.querySelector('meta[name="theme-color"]');
+    if (themeColorMeta) {
+      themeColorMeta.setAttribute('content', theme === 'dark' ? '#070a12' : '#ffffff');
+    }
     try {
       localStorage.setItem('bolsillos_theme', theme);
     } catch (e) {}
