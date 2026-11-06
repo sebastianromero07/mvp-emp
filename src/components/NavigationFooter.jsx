@@ -47,6 +47,7 @@ export function NavigationFooter({ activeTab, onSelectTab, transactionCount, goa
 
         {/* Right Section: Objetivos */}
         <button
+          data-tour="nav-goals"
           onClick={() => onSelectTab('objetivos')}
           className={`flex flex-col items-center justify-center gap-1 transition-all flex-1 py-1 ${
             activeTab === 'objetivos'

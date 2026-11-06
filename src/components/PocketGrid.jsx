@@ -1,6 +1,6 @@
 import React, { useState, useRef, useMemo, useEffect } from 'react';
 import { PocketCard } from './PocketCard';
-import { GripVertical } from 'lucide-react';
+import { GripVertical, Wallet } from 'lucide-react';
 
 export function PocketGrid({
   categories,
@@ -52,7 +52,6 @@ export function PocketGrid({
   // DESKTOP: Native HTML5 Drag and Drop
   // -------------------------------------------------------------
   const handleDragStart = (index, e) => {
-    // If target was a button, don't start dragging
     if (e.target.closest('button')) {
       e.preventDefault();
       return;
@@ -77,7 +76,10 @@ export function PocketGrid({
 
   const handleDragEnd = () => {
     if (dragIndex !== null && dropIndex !== null && dragIndex !== dropIndex) {
-      onReorder(displayItems);
+      const updated = [...categories];
+      const [moved] = updated.splice(dragIndex, 1);
+      updated.splice(dropIndex, 0, moved);
+      onReorder(updated);
     }
     setDragIndex(null);
     setDropIndex(null);
@@ -85,88 +87,16 @@ export function PocketGrid({
 
   const handleDrop = (e) => {
     e.preventDefault();
-    if (dragIndex !== null && dropIndex !== null && dragIndex !== dropIndex) {
-      onReorder(displayItems);
-    }
-    setDragIndex(null);
-    setDropIndex(null);
+    handleDragEnd();
   };
 
   // -------------------------------------------------------------
-  // MOBILE: Long-Press Touch Drag & Drop (450ms hold + page lock)
+  // MOBILE: Touch Drag and Drop with 450ms Long Press
   // -------------------------------------------------------------
-  const startDragFromTouch = (index) => {
-    touchStateRef.current.isDragging = true;
-    setIsTouchDragging(true);
-    setDragIndex(index);
-    setDropIndex(index);
-
-    // Haptic vibration feedback to confirm card is picked up
-    try {
-      if (typeof navigator !== 'undefined' && navigator.vibrate) {
-        navigator.vibrate([45, 25, 45]);
-      }
-    } catch {}
-
-    // Lock page scrolling while dragging so screen does NOT move
-    document.body.style.overflow = 'hidden';
-    document.body.style.touchAction = 'none';
-
-    const onNativeWindowTouchMove = (e) => {
-      if (e.cancelable) {
-        e.preventDefault();
-      }
-      const touch = e.touches[0];
-      if (!touch) return;
-
-      const elUnder = document.elementFromPoint(touch.clientX, touch.clientY);
-      const cardEl = elUnder?.closest('[data-pocket-index]');
-      if (cardEl) {
-        const targetIdx = parseInt(cardEl.getAttribute('data-pocket-index'), 10);
-        if (!isNaN(targetIdx) && targetIdx !== dragInfoRef.current.dropIndex) {
-          setDropIndex(targetIdx);
-        }
-      }
-    };
-
-    const onNativeWindowTouchEnd = () => {
-      if (touchCleanupRef.current) {
-        touchCleanupRef.current();
-        touchCleanupRef.current = null;
-      }
-
-      const { dragIndex: dIdx, dropIndex: dpIdx, displayItems: items } = dragInfoRef.current;
-      if (dIdx !== null && dpIdx !== null && dIdx !== dpIdx) {
-        onReorder(items);
-        try {
-          if (typeof navigator !== 'undefined' && navigator.vibrate) {
-            navigator.vibrate(40);
-          }
-        } catch {}
-      }
-
-      touchStateRef.current.isDragging = false;
-      setIsTouchDragging(false);
-      setDragIndex(null);
-      setDropIndex(null);
-    };
-
-    window.addEventListener('touchmove', onNativeWindowTouchMove, { passive: false });
-    window.addEventListener('touchend', onNativeWindowTouchEnd, { passive: false });
-    window.addEventListener('touchcancel', onNativeWindowTouchEnd, { passive: false });
-
-    touchCleanupRef.current = () => {
-      window.removeEventListener('touchmove', onNativeWindowTouchMove);
-      window.removeEventListener('touchend', onNativeWindowTouchEnd);
-      window.removeEventListener('touchcancel', onNativeWindowTouchEnd);
-      document.body.style.overflow = '';
-      document.body.style.touchAction = '';
-    };
-  };
-
   const handleTouchStart = (index, e) => {
-    // If user tapped a button (like QR), ignore drag
-    if (e.target.closest('button')) return;
+    if (e.target.closest('button')) {
+      return;
+    }
 
     const touch = e.touches[0];
     touchStateRef.current = {
@@ -176,36 +106,112 @@ export function PocketGrid({
       isDragging: false,
     };
 
-    // If touching the explicit grip handle, start slightly faster (150ms), otherwise hold 450ms
-    const isHandle = Boolean(e.target.closest('[data-drag-handle]'));
+    if (touchTimerRef.current) {
+      clearTimeout(touchTimerRef.current);
+    }
+
     touchTimerRef.current = setTimeout(() => {
-      startDragFromTouch(index);
-    }, isHandle ? 150 : 450);
+      try {
+        if ('vibrate' in navigator) {
+          navigator.vibrate(50);
+        }
+      } catch {}
+
+      touchStateRef.current.isDragging = true;
+      setIsTouchDragging(true);
+      setDragIndex(index);
+      setDropIndex(index);
+
+      const originalOverflow = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+
+      const handleGlobalTouchMove = (moveEvent) => {
+        if (!touchStateRef.current.isDragging) return;
+        if (moveEvent.cancelable) {
+          moveEvent.preventDefault();
+        }
+
+        const currentTouch = moveEvent.touches[0];
+        const elemUnderFinger = document.elementFromPoint(currentTouch.clientX, currentTouch.clientY);
+        if (!elemUnderFinger) return;
+
+        const targetCard = elemUnderFinger.closest('[data-pocket-index]');
+        if (targetCard) {
+          const newIdx = parseInt(targetCard.getAttribute('data-pocket-index'), 10);
+          if (!isNaN(newIdx) && newIdx !== dragInfoRef.current.dropIndex) {
+            setDropIndex(newIdx);
+          }
+        }
+      };
+
+      const handleGlobalTouchEnd = () => {
+        document.body.style.overflow = originalOverflow;
+
+        window.removeEventListener('touchmove', handleGlobalTouchMove, { capture: true });
+        window.removeEventListener('touchend', handleGlobalTouchEnd, { capture: true });
+        window.removeEventListener('touchcancel', handleGlobalTouchEnd, { capture: true });
+        touchCleanupRef.current = null;
+
+        const { dragIndex: dIdx, dropIndex: dpIdx, displayItems: dItems } = dragInfoRef.current;
+        if (dIdx !== null && dpIdx !== null && dIdx !== dpIdx) {
+          onReorder(dItems);
+        }
+
+        touchStateRef.current.isDragging = false;
+        setIsTouchDragging(false);
+        setDragIndex(null);
+        setDropIndex(null);
+      };
+
+      window.addEventListener('touchmove', handleGlobalTouchMove, { passive: false, capture: true });
+      window.addEventListener('touchend', handleGlobalTouchEnd, { capture: true });
+      window.addEventListener('touchcancel', handleGlobalTouchEnd, { capture: true });
+
+      touchCleanupRef.current = () => {
+        document.body.style.overflow = originalOverflow;
+        window.removeEventListener('touchmove', handleGlobalTouchMove, { capture: true });
+        window.removeEventListener('touchend', handleGlobalTouchEnd, { capture: true });
+        window.removeEventListener('touchcancel', handleGlobalTouchEnd, { capture: true });
+      };
+    }, 450);
   };
 
   const handleTouchMove = (e) => {
-    // If not dragging yet, check if finger moved > 8px (scrolling the page)
-    if (!touchStateRef.current.isDragging) {
+    if (!touchStateRef.current.isDragging && touchTimerRef.current) {
       const touch = e.touches[0];
-      const dx = touch.clientX - touchStateRef.current.startX;
-      const dy = touch.clientY - touchStateRef.current.startY;
-      if (Math.hypot(dx, dy) > 8) {
-        // User is scrolling the page, cancel long-press drag
-        if (touchTimerRef.current) {
-          clearTimeout(touchTimerRef.current);
-          touchTimerRef.current = null;
-        }
+      const deltaX = Math.abs(touch.clientX - touchStateRef.current.startX);
+      const deltaY = Math.abs(touch.clientY - touchStateRef.current.startY);
+      if (deltaX > 8 || deltaY > 8) {
+        clearTimeout(touchTimerRef.current);
+        touchTimerRef.current = null;
       }
     }
   };
 
   const handleTouchEnd = () => {
-    // If finger lifted before 450ms, cancel the hold timer
     if (touchTimerRef.current) {
       clearTimeout(touchTimerRef.current);
       touchTimerRef.current = null;
     }
   };
+
+  if (categories.length === 0) {
+    return (
+      <div className="rounded-3xl border-2 border-dashed border-slate-300 dark:border-slate-800 p-8 text-center flex flex-col items-center justify-center gap-3 bg-white/40 dark:bg-slate-900/30">
+        <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 text-indigo-500 dark:text-indigo-400 flex items-center justify-center">
+          <Wallet className="w-6 h-6 stroke-[2]" />
+        </div>
+        <div className="max-w-xs">
+          <h3 className="text-sm font-extrabold text-slate-800 dark:text-slate-200">
+            Aún no tienes bolsillos creados
+          </h3>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
+            Pulsa en el botón <strong>+ Crear Bolsillo</strong> abajo para empezar a repartir tu saldo disponible en categorías estancas.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -222,6 +228,7 @@ export function PocketGrid({
           <div
             key={cat.id}
             data-pocket-index={index}
+            data-tour={index === 0 ? "pocket-card" : undefined}
             draggable
             onDragStart={(e) => handleDragStart(index, e)}
             onDragEnter={(e) => handleDragEnter(index, e)}
@@ -250,7 +257,6 @@ export function PocketGrid({
                 isLowFunds: false,
               }}
               onSelectPocket={(catId) => {
-                // Only select if not dragging
                 if (!touchStateRef.current.isDragging && dragIndex === null) {
                   onSelectPocket(catId);
                 }

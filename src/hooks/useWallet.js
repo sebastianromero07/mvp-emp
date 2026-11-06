@@ -6,6 +6,8 @@ const STORAGE_KEYS = {
   BUDGETS: 'emp_wallet_budgets_v1',
   TRANSACTIONS: 'emp_wallet_transactions_v1',
   GOALS: 'emp_wallet_goals_v1',
+  MODE: 'emp_wallet_mode_v1',
+  SEED_BALANCE: 'emp_wallet_seed_balance_v1',
 };
 
 const INITIAL_GOALS = [
@@ -60,13 +62,34 @@ const INITIAL_GOALS = [
 ];
 
 export function useWallet() {
+  const [walletMode, setWalletMode] = useState(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEYS.MODE);
+      if (saved === 'seed' || saved === 'demo') return saved;
+    } catch {}
+    return 'demo';
+  });
+
+  const [seedBalance, setSeedBalance] = useState(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEYS.SEED_BALANCE);
+      if (saved && !isNaN(parseFloat(saved))) return parseFloat(saved);
+    } catch {}
+    return 2270;
+  });
+
   const [categories, setCategories] = useState(() => {
     try {
+      const mode = localStorage.getItem(STORAGE_KEYS.MODE);
       const saved = localStorage.getItem(STORAGE_KEYS.CATEGORIES);
       if (saved) {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        if (Array.isArray(parsed)) {
+          if (mode === 'seed' && parsed.length === 0) return [];
+          if (parsed.length > 0) return parsed;
+        }
       }
+      if (mode === 'seed') return [];
     } catch (e) {
       console.error('Error loading categories from localStorage', e);
     }
@@ -75,8 +98,13 @@ export function useWallet() {
 
   const [budgets, setBudgets] = useState(() => {
     try {
+      const mode = localStorage.getItem(STORAGE_KEYS.MODE);
       const saved = localStorage.getItem(STORAGE_KEYS.BUDGETS);
-      if (saved) return JSON.parse(saved);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed) return parsed;
+      }
+      if (mode === 'seed') return {};
     } catch (e) {
       console.error('Error loading budgets from localStorage', e);
     }
@@ -85,8 +113,10 @@ export function useWallet() {
 
   const [transactions, setTransactions] = useState(() => {
     try {
+      const mode = localStorage.getItem(STORAGE_KEYS.MODE);
       const saved = localStorage.getItem(STORAGE_KEYS.TRANSACTIONS);
       if (saved) return JSON.parse(saved);
+      if (mode === 'seed') return [];
     } catch (e) {
       console.error('Error loading transactions from localStorage', e);
     }
@@ -95,16 +125,34 @@ export function useWallet() {
 
   const [goals, setGoals] = useState(() => {
     try {
+      const mode = localStorage.getItem(STORAGE_KEYS.MODE);
       const saved = localStorage.getItem(STORAGE_KEYS.GOALS);
       if (saved) {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        if (Array.isArray(parsed)) {
+          if (mode === 'seed' && parsed.length === 0) return [];
+          if (parsed.length > 0) return parsed;
+        }
       }
+      if (mode === 'seed') return [];
     } catch (e) {
       console.error('Error loading goals from localStorage', e);
     }
     return INITIAL_GOALS;
   });
+
+  // Persist mode & seed balance
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEYS.MODE, walletMode);
+    } catch {}
+  }, [walletMode]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEYS.SEED_BALANCE, String(seedBalance));
+    } catch {}
+  }, [seedBalance]);
 
   // Persist categories
   useEffect(() => {
@@ -234,9 +282,20 @@ export function useWallet() {
 
   // Global calculations
   const summary = useMemo(() => {
-    const totalBudget = Object.values(budgets).reduce((sum, val) => sum + (Number(val) || 0), 0);
+    const totalAllocatedInPockets = categories.reduce((sum, cat) => sum + (Number(budgets[cat.id]) || 0), 0);
     const totalSpent = transactions.reduce((sum, t) => sum + (Number(t.amount) || 0), 0);
-    const totalAvailable = totalBudget - totalSpent;
+
+    let totalBudget = 0;
+    let totalAvailable = 0;
+
+    if (walletMode === 'seed') {
+      totalBudget = seedBalance;
+      // En Modo Semilla, el saldo disponible se resta conforme se asigna presupuesto a bolsillos
+      totalAvailable = Math.max(0, seedBalance - totalAllocatedInPockets);
+    } else {
+      totalBudget = totalAllocatedInPockets;
+      totalAvailable = totalBudget - totalSpent;
+    }
 
     const emergencyBudget = Number(budgets.emergencias) || 0;
     const emergencySpent = transactions
@@ -244,7 +303,7 @@ export function useWallet() {
       .reduce((sum, t) => sum + (Number(t.amount) || 0), 0);
     const emergencyAvailable = emergencyBudget - emergencySpent;
 
-    const operationalBudget = totalBudget - emergencyBudget;
+    const operationalBudget = totalAllocatedInPockets - emergencyBudget;
     const operationalSpent = totalSpent - emergencySpent;
     const operationalAvailable = operationalBudget - operationalSpent;
 
@@ -255,6 +314,8 @@ export function useWallet() {
       totalBudget,
       totalSpent,
       totalAvailable,
+      totalAllocatedInPockets,
+      unallocatedBalance: walletMode === 'seed' ? Math.max(0, seedBalance - totalAllocatedInPockets) : totalAvailable,
       emergencyBudget,
       emergencySpent,
       emergencyAvailable,
@@ -264,10 +325,9 @@ export function useWallet() {
       hasAnyOverdraft,
       isGlobalDeficit,
       // Net Savings metric:
-      // Initial unspent balance compared to emergency reserve
       netSavings: totalAvailable,
     };
-  }, [budgets, transactions, pocketStats]);
+  }, [budgets, transactions, pocketStats, walletMode, seedBalance, categories]);
 
   // Add new expense
   const addExpense = ({ categoryId, amount, description }) => {
@@ -318,6 +378,14 @@ export function useWallet() {
       throw new Error('Debes indicar un nombre para el bolsillo');
     }
 
+    if (walletMode === 'seed') {
+      const currentAllocated = categories.reduce((sum, cat) => sum + (Number(budgets[cat.id]) || 0), 0);
+      const remainingSeed = seedBalance - currentAllocated;
+      if (numBudget > remainingSeed) {
+        throw new Error(`El presupuesto ($${numBudget.toFixed(2)}) supera tu Saldo Total disponible ($${remainingSeed.toFixed(2)})`);
+      }
+    }
+
     const id = `pocket-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
     const theme = getColorTheme(color);
 
@@ -340,15 +408,57 @@ export function useWallet() {
     return newCategory;
   };
 
-  // Reset to seed data
-  const resetToSeedData = () => {
+  // Delete an existing pocket and release its budget
+  const deletePocket = (pocketId) => {
+    setCategories((prev) => prev.filter((c) => c.id !== pocketId));
+    setBudgets((prev) => {
+      const next = { ...prev };
+      delete next[pocketId];
+      return next;
+    });
+    setTransactions((prev) => prev.filter((t) => t.categoryId !== pocketId));
+  };
+
+  // Reset to Modo Semilla (Comienza desde 0 con solo el saldo total)
+  const resetToSeedMode = (initialAmount = 2270) => {
+    const amount = Number(initialAmount) || 2270;
+    setWalletMode('seed');
+    setSeedBalance(amount);
+    setCategories([]);
+    setBudgets({});
+    setTransactions([]);
+    setGoals([]);
+    try {
+      localStorage.setItem(STORAGE_KEYS.MODE, 'seed');
+      localStorage.setItem(STORAGE_KEYS.SEED_BALANCE, String(amount));
+      localStorage.setItem(STORAGE_KEYS.CATEGORIES, JSON.stringify([]));
+      localStorage.setItem(STORAGE_KEYS.BUDGETS, JSON.stringify({}));
+      localStorage.setItem(STORAGE_KEYS.TRANSACTIONS, JSON.stringify([]));
+      localStorage.setItem(STORAGE_KEYS.GOALS, JSON.stringify([]));
+    } catch {}
+  };
+
+  // Reset to Modo Demo (Demostración precargada)
+  const resetToDemoMode = () => {
+    setWalletMode('demo');
+    setSeedBalance(2270);
     setCategories(CATEGORIES);
     setBudgets(INITIAL_BUDGETS);
     setTransactions(INITIAL_TRANSACTIONS);
     setGoals(INITIAL_GOALS);
     try {
-      localStorage.removeItem(STORAGE_KEYS.CATEGORIES);
+      localStorage.setItem(STORAGE_KEYS.MODE, 'demo');
+      localStorage.setItem(STORAGE_KEYS.SEED_BALANCE, '2270');
+      localStorage.setItem(STORAGE_KEYS.CATEGORIES, JSON.stringify(CATEGORIES));
+      localStorage.setItem(STORAGE_KEYS.BUDGETS, JSON.stringify(INITIAL_BUDGETS));
+      localStorage.setItem(STORAGE_KEYS.TRANSACTIONS, JSON.stringify(INITIAL_TRANSACTIONS));
+      localStorage.setItem(STORAGE_KEYS.GOALS, JSON.stringify(INITIAL_GOALS));
     } catch {}
+  };
+
+  // Legacy reset (defaults to demo)
+  const resetToSeedData = () => {
+    resetToDemoMode();
   };
 
   // Clear all transactions for clean month
@@ -364,6 +474,9 @@ export function useWallet() {
   };
 
   return {
+    walletMode,
+    seedBalance,
+    setSeedBalance,
     categories,
     budgets,
     transactions,
@@ -373,7 +486,10 @@ export function useWallet() {
     deleteExpense,
     updateBudgets,
     createPocket,
+    deletePocket,
     reorderCategories,
+    resetToSeedMode,
+    resetToDemoMode,
     resetToSeedData,
     clearMonthTransactions,
     goals,

@@ -1,9 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { PRESET_POCKET_CATEGORIES } from '../constants/categories';
 import { CategoryIcon } from './CategoryIcon';
-import { X, Plus, Wallet, Sparkles, Check } from 'lucide-react';
+import { formatCurrency } from '../utils/formatters';
+import { X, Plus, Wallet, Sparkles, Check, ArrowDownRight } from 'lucide-react';
 
-export function CreatePocketModal({ isOpen, onClose, onCreatePocket }) {
+export function CreatePocketModal({
+  isOpen,
+  onClose,
+  onCreatePocket,
+  availableBalance,
+  walletMode = 'demo',
+}) {
   const [selectedPreset, setSelectedPreset] = useState(PRESET_POCKET_CATEGORIES[0]);
   const [name, setName] = useState(PRESET_POCKET_CATEGORIES[0].name);
   const [budget, setBudget] = useState('');
@@ -177,6 +184,29 @@ export function CreatePocketModal({ isOpen, onClose, onCreatePocket }) {
                 </button>
               ))}
             </div>
+
+            {/* Saldo deduction feedback */}
+            {availableBalance !== undefined && (
+              <div className="mt-3 p-3 rounded-2xl bg-indigo-50/70 dark:bg-indigo-950/40 border border-indigo-200/60 dark:border-indigo-800/60 space-y-1.5">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-slate-600 dark:text-slate-400 font-medium">Saldo Total disponible:</span>
+                  <span className="font-extrabold font-mono text-slate-900 dark:text-white">
+                    {formatCurrency(availableBalance)}
+                  </span>
+                </div>
+                {isBudgetValid && (
+                  <div className="flex items-center justify-between text-xs pt-1.5 border-t border-indigo-200/40 dark:border-indigo-800/40">
+                    <span className="text-indigo-600 dark:text-indigo-300 font-semibold flex items-center gap-1">
+                      <ArrowDownRight className="w-3.5 h-3.5" />
+                      Restará del Saldo Total:
+                    </span>
+                    <span className="font-extrabold font-mono text-emerald-600 dark:text-emerald-400">
+                      quedará {formatCurrency(Math.max(0, availableBalance - numBudget))}
+                    </span>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Form helper note */}

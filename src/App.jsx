@@ -12,13 +12,18 @@ import { BudgetModal } from './components/BudgetModal';
 import { QuickExpenseModal } from './components/QuickExpenseModal';
 import { QRScannerModal } from './components/QRScannerModal';
 import { CreatePocketModal } from './components/CreatePocketModal';
+import { ResetModeModal } from './components/ResetModeModal';
 import { SplashScreen } from './components/SplashScreen';
+import { OnboardingModal } from './components/OnboardingModal';
+import { AppWalkthrough } from './components/AppWalkthrough';
 import { Toast } from './components/Toast';
 import { formatCurrency } from './utils/formatters';
 import { AlertTriangle, Plus } from 'lucide-react';
 
 export default function App() {
   const {
+    walletMode,
+    seedBalance,
     categories,
     budgets,
     transactions,
@@ -34,11 +39,17 @@ export default function App() {
     deleteExpense,
     updateBudgets,
     createPocket,
+    deletePocket,
     reorderCategories,
+    resetToSeedMode,
+    resetToDemoMode,
     resetToSeedData,
   } = useWallet();
 
   const [showSplash, setShowSplash] = useState(true);
+  const [isOnboardingOpen, setIsOnboardingOpen] = useState(false);
+  const [isTourOpen, setIsTourOpen] = useState(false);
+  const [isResetModeOpen, setIsResetModeOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('billetera'); // 'reporte' | 'billetera' | 'objetivos'
   const [selectedPocketId, setSelectedPocketId] = useState(null); // When user taps a pocket card to view its dedicated space
   const [selectedCategory, setSelectedCategory] = useState(CATEGORIES[0].id);
@@ -51,6 +62,24 @@ export default function App() {
 
   const showToast = (message, type = 'success') => {
     setToast({ message, type });
+  };
+
+  const handleSplashComplete = () => {
+    setShowSplash(false);
+    // Onboarding se muestra cada vez que se ingresa a la aplicación
+    setIsOnboardingOpen(true);
+  };
+
+  const handleStartTourFromOnboarding = () => {
+    setIsOnboardingOpen(false);
+    // Ensure we are in the main wallet tab to show the tour targets
+    setActiveTab('billetera');
+    setSelectedPocketId(null);
+    setIsTourOpen(true);
+  };
+
+  const handleCloseOnboarding = () => {
+    setIsOnboardingOpen(false);
   };
 
   const handleOpenExpenseModal = (catId) => {
@@ -66,7 +95,7 @@ export default function App() {
   const handleCreatePocket = (pocketData) => {
     try {
       const newPocket = createPocket(pocketData);
-      showToast(`Bolsillo "${newPocket.name}" creado con éxito ($${pocketData.budget.toFixed(2)}).`, 'success');
+      showToast(`Bolsillo "${newPocket.name}" creado con éxito ($${pocketData.budget.toFixed(2)}). Se restó de tu Saldo Total.`, 'success');
     } catch (err) {
       showToast(err.message, 'error');
     }
@@ -174,16 +203,17 @@ export default function App() {
       {isMainScreen && (
         <Header
           onOpenConfig={() => setIsConfigOpen(true)}
-          onResetDemo={handleResetDemo}
+          onOpenResetModal={() => setIsResetModeOpen(true)}
+          onOpenGuide={() => setIsOnboardingOpen(true)}
+          walletMode={walletMode}
         />
       )}
 
       {/* Main Container - Optimized for mobile & desktop with dynamic safe padding */}
-      <main className={`flex-1 w-full max-w-lg mx-auto px-3.5 sm:px-4 pb-24 space-y-4 ${
-        isMainScreen
+      <main className={`flex-1 w-full max-w-lg mx-auto px-3.5 sm:px-4 pb-24 space-y-4 ${isMainScreen
           ? 'pt-[calc(max(0.75rem,env(safe-area-inset-top,0.75rem))+4.25rem)]'
           : 'pt-[max(1rem,env(safe-area-inset-top,1rem))]'
-      }`}>
+        }`}>
 
         {/* ========================================================= */}
         {/* TAB 1: BILLETERA (Dashboard Bolsillos O Espacio Propio)    */}
@@ -203,21 +233,25 @@ export default function App() {
             />
           ) : (
             <div className="space-y-4 animate-fade-in">
-              {/* Prominent Balance Ribbon - Centered without PiggyBank icon */}
-              <div className="rounded-3xl glass-card p-5 sm:p-6 border border-slate-200/90 dark:border-slate-800/80 shadow-md dark:shadow-none flex flex-col items-center justify-center text-center">
+              {/* Prominent Balance Ribbon - Solo Saldo Total Disponible (sin el / totalBudget) */}
+              <div
+                data-tour="balance"
+                className="rounded-3xl glass-card p-5 sm:p-6 border border-slate-200/90 dark:border-slate-800/80 shadow-md dark:shadow-none flex flex-col items-center justify-center text-center"
+              >
                 <span className="text-xs sm:text-sm uppercase tracking-widest text-slate-500 dark:text-slate-400 font-extrabold block mb-1.5">
                   Saldo Total Disponible
                 </span>
-                <div className="flex items-baseline justify-center gap-2.5">
-                  <span className={`text-3xl sm:text-4xl md:text-5xl font-black font-mono tracking-tight leading-none ${
-                    summary.totalAvailable < 0 ? 'text-rose-600 dark:text-rose-400' : 'text-slate-900 dark:text-white'
-                  }`}>
+                <div className="flex items-baseline justify-center">
+                  <span className={`text-3xl sm:text-4xl md:text-5xl font-black font-mono tracking-tight leading-none ${summary.totalAvailable < 0 ? 'text-rose-600 dark:text-rose-400' : 'text-slate-900 dark:text-white'
+                    }`}>
                     {formatCurrency(summary.totalAvailable)}
                   </span>
-                  <span className="text-sm sm:text-base text-slate-500 dark:text-slate-400 font-bold font-mono">
-                    / {formatCurrency(summary.totalBudget)}
-                  </span>
                 </div>
+                {walletMode === 'seed' && summary.totalAllocatedInPockets > 0 && (
+                  <span className="text-xs text-indigo-500 dark:text-indigo-400 font-semibold mt-1.5">
+                    {formatCurrency(summary.totalAllocatedInPockets)} asignados en {categories.length} {categories.length === 1 ? 'bolsillo' : 'bolsillos'}
+                  </span>
+                )}
               </div>
 
               {/* 2. Pocket Cards in 2x2 GRID with Drag & Drop */}
@@ -226,7 +260,7 @@ export default function App() {
                   <h2 className="text-sm sm:text-base font-black text-slate-900 dark:text-white uppercase tracking-wider">
                     TUS BOLSILLOS
                   </h2>
-                  
+
                   <button
                     onClick={handleTriggerTestOverdraft}
                     className="text-xs text-amber-600 hover:text-amber-700 dark:text-amber-400/90 dark:hover:text-amber-300 transition-colors flex items-center gap-1.5 font-bold hover:underline"
@@ -255,6 +289,7 @@ export default function App() {
               <div className="pt-2">
                 <button
                   type="button"
+                  data-tour="create-pocket"
                   onClick={() => setIsCreatePocketOpen(true)}
                   className="w-full py-4 px-5 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-sm sm:text-base flex items-center justify-center gap-2.5 shadow-lg shadow-indigo-600/30 active:scale-[0.98] transition-all cursor-pointer"
                 >
@@ -311,6 +346,26 @@ export default function App() {
         isOpen={isCreatePocketOpen}
         onClose={() => setIsCreatePocketOpen(false)}
         onCreatePocket={handleCreatePocket}
+        availableBalance={summary.totalAvailable}
+        walletMode={walletMode}
+      />
+
+      {/* Modal for selecting Demo vs Seed mode */}
+      <ResetModeModal
+        isOpen={isResetModeOpen}
+        onClose={() => setIsResetModeOpen(false)}
+        currentMode={walletMode}
+        seedBalance={seedBalance}
+        onSelectSeedMode={(amount) => {
+          resetToSeedMode(amount);
+          setSelectedPocketId(null);
+          showToast(`Modo Semilla iniciado: Saldo Total disponible $${amount.toFixed(2)}.`, 'success');
+        }}
+        onSelectDemoMode={() => {
+          resetToDemoMode();
+          setSelectedPocketId(null);
+          showToast('Modo Demo cargado con bolsillos de demostración.', 'info');
+        }}
       />
 
       {/* Modal for adding expense directly when tapping a pocket '+' button */}
@@ -345,8 +400,26 @@ export default function App() {
       {/* Floating Feedback Toast */}
       <Toast toast={toast} onClose={() => setToast(null)} />
 
+      {/* Onboarding Flow: 4 Pantallas para aliviar los dolores financieros del usuario */}
+      <OnboardingModal
+        isOpen={isOnboardingOpen}
+        onClose={handleCloseOnboarding}
+        onStartTour={handleStartTourFromOnboarding}
+      />
+
+      {/* Interactive App Walkthrough Tour: Guía interactiva paso a paso */}
+      <AppWalkthrough
+        isOpen={isTourOpen}
+        onClose={() => setIsTourOpen(false)}
+        hasPockets={categories.length > 0}
+        onNavigateToTab={(tab) => {
+          setActiveTab(tab);
+          setSelectedPocketId(null);
+        }}
+      />
+
       {/* Netflix-Style Splash Screen upon opening the app */}
-      {showSplash && <SplashScreen onComplete={() => setShowSplash(false)} />}
+      {showSplash && <SplashScreen onComplete={handleSplashComplete} />}
     </div>
   );
 }

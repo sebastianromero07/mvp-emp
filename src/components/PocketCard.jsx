@@ -54,6 +54,7 @@ export function PocketCard({ stats, onSelectPocket, onOpenQRPay }) {
         {/* Top-Right: dedicated QR Payment button (como en Yape) */}
         <button
           type="button"
+          data-tour="qr-button"
           onClick={(e) => {
             e.stopPropagation();
             onOpenQRPay && onOpenQRPay(category.id);
