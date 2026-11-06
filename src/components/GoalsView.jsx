@@ -136,6 +136,7 @@ export function GoalsView({ goals = [], onAddGoal, onUpdateSaved, onDeleteGoal, 
   const [isTouchDragging, setIsTouchDragging] = useState(false);
 
   const touchTimerRef = useRef(null);
+  const touchCleanupRef = useRef(null);
   const touchStateRef = useRef({
     startX: 0,
     startY: 0,
@@ -164,9 +165,16 @@ export function GoalsView({ goals = [], onAddGoal, onUpdateSaved, onDeleteGoal, 
     return result;
   }, [filteredGoals, dragIndex, dropIndex]);
 
+  // Keep a ref of live drag info so window-level touch listeners always see fresh values
+  const dragInfoRef = useRef({ dragIndex, dropIndex, displayGoals });
+  useEffect(() => {
+    dragInfoRef.current = { dragIndex, dropIndex, displayGoals };
+  }, [dragIndex, dropIndex, displayGoals]);
+
   useEffect(() => {
     return () => {
       if (touchTimerRef.current) clearTimeout(touchTimerRef.current);
+      if (touchCleanupRef.current) touchCleanupRef.current();
     };
   }, []);
 
@@ -231,7 +239,9 @@ export function GoalsView({ goals = [], onAddGoal, onUpdateSaved, onDeleteGoal, 
     setDropIndex(null);
   };
 
-  // Mobile Touch Drag & Drop
+  // -------------------------------------------------------------
+  // MOBILE: Long-Press Touch Drag & Drop (450ms hold + page lock)
+  // -------------------------------------------------------------
   const startDragFromTouch = (index) => {
     touchStateRef.current.isDragging = true;
     setIsTouchDragging(true);
@@ -240,9 +250,64 @@ export function GoalsView({ goals = [], onAddGoal, onUpdateSaved, onDeleteGoal, 
 
     try {
       if (typeof navigator !== 'undefined' && navigator.vibrate) {
-        navigator.vibrate(30);
+        navigator.vibrate([45, 25, 45]);
       }
     } catch {}
+
+    // Lock page scrolling while dragging so screen does NOT move
+    document.body.style.overflow = 'hidden';
+    document.body.style.touchAction = 'none';
+
+    const onNativeWindowTouchMove = (e) => {
+      if (e.cancelable) {
+        e.preventDefault();
+      }
+      const touch = e.touches[0];
+      if (!touch) return;
+
+      const elUnder = document.elementFromPoint(touch.clientX, touch.clientY);
+      const cardEl = elUnder?.closest('[data-goal-index]');
+      if (cardEl) {
+        const targetIdx = parseInt(cardEl.getAttribute('data-goal-index'), 10);
+        if (!isNaN(targetIdx) && targetIdx !== dragInfoRef.current.dropIndex) {
+          setDropIndex(targetIdx);
+        }
+      }
+    };
+
+    const onNativeWindowTouchEnd = () => {
+      if (touchCleanupRef.current) {
+        touchCleanupRef.current();
+        touchCleanupRef.current = null;
+      }
+
+      const { dragIndex: dIdx, dropIndex: dpIdx, displayGoals: items } = dragInfoRef.current;
+      if (dIdx !== null && dpIdx !== null && dIdx !== dpIdx) {
+        commitReorder(items);
+        try {
+          if (typeof navigator !== 'undefined' && navigator.vibrate) {
+            navigator.vibrate(40);
+          }
+        } catch {}
+      }
+
+      touchStateRef.current.isDragging = false;
+      setIsTouchDragging(false);
+      setDragIndex(null);
+      setDropIndex(null);
+    };
+
+    window.addEventListener('touchmove', onNativeWindowTouchMove, { passive: false });
+    window.addEventListener('touchend', onNativeWindowTouchEnd, { passive: false });
+    window.addEventListener('touchcancel', onNativeWindowTouchEnd, { passive: false });
+
+    touchCleanupRef.current = () => {
+      window.removeEventListener('touchmove', onNativeWindowTouchMove);
+      window.removeEventListener('touchend', onNativeWindowTouchEnd);
+      window.removeEventListener('touchcancel', onNativeWindowTouchEnd);
+      document.body.style.overflow = '';
+      document.body.style.touchAction = '';
+    };
   };
 
   const handleTouchStart = (index, e) => {
@@ -256,42 +321,22 @@ export function GoalsView({ goals = [], onAddGoal, onUpdateSaved, onDeleteGoal, 
       isDragging: false,
     };
 
-    if (e.target.closest('[data-drag-handle]')) {
-      startDragFromTouch(index);
-      return;
-    }
-
+    const isHandle = Boolean(e.target.closest('[data-drag-handle]'));
     touchTimerRef.current = setTimeout(() => {
       startDragFromTouch(index);
-    }, 180);
+    }, isHandle ? 150 : 450);
   };
 
   const handleTouchMove = (e) => {
-    const touch = e.touches[0];
-    const dx = touch.clientX - touchStateRef.current.startX;
-    const dy = touch.clientY - touchStateRef.current.startY;
-    const dist = Math.hypot(dx, dy);
-
     if (!touchStateRef.current.isDragging) {
-      if (dist > 8) {
+      const touch = e.touches[0];
+      const dx = touch.clientX - touchStateRef.current.startX;
+      const dy = touch.clientY - touchStateRef.current.startY;
+      if (Math.hypot(dx, dy) > 8) {
         if (touchTimerRef.current) {
           clearTimeout(touchTimerRef.current);
           touchTimerRef.current = null;
         }
-      }
-      return;
-    }
-
-    if (e.cancelable) {
-      e.preventDefault();
-    }
-
-    const elUnder = document.elementFromPoint(touch.clientX, touch.clientY);
-    const cardEl = elUnder?.closest('[data-goal-index]');
-    if (cardEl) {
-      const targetIdx = parseInt(cardEl.getAttribute('data-goal-index'), 10);
-      if (!isNaN(targetIdx) && targetIdx !== dropIndex) {
-        setDropIndex(targetIdx);
       }
     }
   };
@@ -301,22 +346,6 @@ export function GoalsView({ goals = [], onAddGoal, onUpdateSaved, onDeleteGoal, 
       clearTimeout(touchTimerRef.current);
       touchTimerRef.current = null;
     }
-
-    if (touchStateRef.current.isDragging) {
-      if (dragIndex !== null && dropIndex !== null && dragIndex !== dropIndex) {
-        commitReorder(displayGoals);
-        try {
-          if (typeof navigator !== 'undefined' && navigator.vibrate) {
-            navigator.vibrate(40);
-          }
-        } catch {}
-      }
-    }
-
-    touchStateRef.current.isDragging = false;
-    setIsTouchDragging(false);
-    setDragIndex(null);
-    setDropIndex(null);
   };
 
   const handleSelectTemplate = (template) => {
@@ -416,9 +445,6 @@ export function GoalsView({ goals = [], onAddGoal, onUpdateSaved, onDeleteGoal, 
           </button>
         ))}
         <div className="ml-auto flex items-center gap-2 shrink-0">
-          <span className="text-[10px] text-slate-400 dark:text-slate-500 font-normal hidden xs:inline">
-            · Arrastra para ordenar
-          </span>
           <span className="text-[10px] text-slate-400 font-mono font-semibold">
             {filteredGoals.length} {filteredGoals.length === 1 ? 'meta' : 'metas'}
           </span>
@@ -620,11 +646,11 @@ export function GoalsView({ goals = [], onAddGoal, onUpdateSaved, onDeleteGoal, 
                   onDrop={handleDrop}
                   onTouchStart={(e) => handleTouchStart(index, e)}
                   style={{ touchAction: isTouchDragging ? 'none' : 'pan-y' }}
-                  className={`relative rounded-3xl overflow-hidden border border-slate-200 dark:border-slate-800 shadow-md group transition-all duration-200 flex flex-col justify-between min-h-[190px] sm:min-h-[210px] cursor-grab active:cursor-grabbing ${
+                  className={`relative rounded-3xl overflow-hidden border border-slate-200 dark:border-slate-800 shadow-md group transition-all duration-200 flex flex-col justify-between min-h-[190px] sm:min-h-[210px] cursor-grab active:cursor-grabbing select-none ${
                     isBeingDragged
-                      ? 'opacity-40 scale-95 z-10'
+                      ? 'opacity-85 scale-105 shadow-2xl ring-2 ring-emerald-500 z-30'
                       : isDropTarget
-                      ? 'scale-[1.03] ring-2 ring-emerald-500 shadow-xl z-20'
+                      ? 'scale-[1.02] ring-2 ring-emerald-400/80 shadow-xl z-20'
                       : 'hover:scale-[1.01]'
                   }`}
                 >

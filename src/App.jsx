@@ -220,14 +220,9 @@ export default function App() {
               {/* 2. Pocket Cards in 2x2 GRID with Drag & Drop */}
               <section aria-label="Bolsillos de Presupuesto">
                 <div className="flex items-center justify-between mb-3 px-1">
-                  <div className="flex items-center gap-2.5">
-                    <h2 className="text-sm sm:text-base font-black text-slate-900 dark:text-white uppercase tracking-wider">
-                      TUS BOLSILLOS
-                    </h2>
-                    <span className="text-xs text-slate-400 dark:text-slate-500 font-medium">
-                      · Arrastra para ordenar
-                    </span>
-                  </div>
+                  <h2 className="text-sm sm:text-base font-black text-slate-900 dark:text-white uppercase tracking-wider">
+                    TUS BOLSILLOS
+                  </h2>
                   
                   <button
                     onClick={handleTriggerTestOverdraft}

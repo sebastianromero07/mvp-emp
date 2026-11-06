@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { CategoryIcon } from './CategoryIcon';
 import { formatCurrency, formatDateTime } from '../utils/formatters';
 import {
@@ -11,7 +11,11 @@ import {
   Sparkles,
   Store,
   ShieldCheck,
-  Share2
+  Share2,
+  Camera,
+  CameraOff,
+  AlertCircle,
+  Loader2
 } from 'lucide-react';
 
 export function QRScannerModal({
@@ -29,9 +33,33 @@ export function QRScannerModal({
   const [concept, setConcept] = useState('Pago con QR');
   const [transactionReceipt, setTransactionReceipt] = useState(null);
 
+  // Live Browser Camera States
+  const videoRef = useRef(null);
+  const streamRef = useRef(null);
+  const autoDetectTimerRef = useRef(null);
+  const [cameraActive, setCameraActive] = useState(false);
+  const [cameraLoading, setCameraLoading] = useState(false);
+  const [cameraError, setCameraError] = useState(null);
+
   const category = categories.find((c) => c.id === categoryId) || categories[0];
   const stats = pocketStats && category ? pocketStats[category.id] : null;
   const availableBalance = stats ? stats.available : 0;
+
+  const stopCamera = () => {
+    if (autoDetectTimerRef.current) {
+      clearTimeout(autoDetectTimerRef.current);
+      autoDetectTimerRef.current = null;
+    }
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach((track) => track.stop());
+      streamRef.current = null;
+    }
+    if (videoRef.current) {
+      videoRef.current.srcObject = null;
+    }
+    setCameraActive(false);
+    setCameraLoading(false);
+  };
 
   useEffect(() => {
     if (isOpen) {
@@ -40,6 +68,10 @@ export function QRScannerModal({
       setAmount('');
       setConcept('Pago con QR');
       setTransactionReceipt(null);
+      setCameraError(null);
+      setCameraActive(false);
+      setCameraLoading(false);
+
       // Pre-select a realistic merchant
       const merchants = [
         'Restaurante Don Pepe',
@@ -50,14 +82,113 @@ export function QRScannerModal({
         'Tienda Minimarket Express',
       ];
       setMerchantName(merchants[Math.floor(Math.random() * merchants.length)]);
+    } else {
+      stopCamera();
     }
+
+    return () => {
+      stopCamera();
+    };
   }, [isOpen, categoryId]);
+
+  // Ensure stream attaches to video element when camera becomes active
+  useEffect(() => {
+    if (cameraActive && streamRef.current && videoRef.current) {
+      videoRef.current.srcObject = streamRef.current;
+      videoRef.current.play().catch(() => {});
+    }
+  }, [cameraActive]);
+
+  // Clean up camera when leaving SCANNER view
+  useEffect(() => {
+    if (viewState !== 'SCANNER') {
+      stopCamera();
+    }
+  }, [viewState]);
 
   if (!isOpen) return null;
 
   const handleSimulateScan = (customAmount = 24.50) => {
+    stopCamera();
     setAmount(customAmount.toString());
     setViewState('CONFIRM');
+  };
+
+  // Triggers browser camera permission request: navigator.mediaDevices.getUserMedia
+  const handleStartCameraAndScan = async (customAmount = 24.50) => {
+    setCameraError(null);
+    setCameraLoading(true);
+
+    try {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        throw new Error('Tu navegador no tiene soporte directo para cámara web.');
+      }
+
+      // Solicitud nativa del navegador para prender la cámara
+      const mediaStream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          facingMode: { ideal: 'environment' },
+          width: { ideal: 1280 },
+          height: { ideal: 720 },
+        },
+        audio: false,
+      });
+
+      streamRef.current = mediaStream;
+      setCameraActive(true);
+      setCameraLoading(false);
+
+      // Vibración de inicio
+      try {
+        if (typeof navigator !== 'undefined' && navigator.vibrate) {
+          navigator.vibrate(40);
+        }
+      } catch {}
+
+      // Mantiene la cámara encendida transmitiendo en vivo durante 2.5s y simula la lectura del QR
+      autoDetectTimerRef.current = setTimeout(() => {
+        stopCamera();
+        handleSimulateScan(customAmount);
+      }, 2500);
+
+    } catch (err) {
+      console.warn('Error al solicitar cámara:', err);
+      setCameraLoading(false);
+      setCameraActive(false);
+
+      const isDenied = err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError';
+      setCameraError(
+        isDenied
+          ? 'Permiso de cámara no concedido en el navegador.'
+          : 'No se pudo acceder a la cámara en este dispositivo.'
+      );
+
+      // Si se denegó el permiso, permitimos continuar al flujo de pago tras un breve aviso
+      setTimeout(() => {
+        handleSimulateScan(customAmount);
+      }, 1800);
+    }
+  };
+
+  const handleToggleFlashlight = async () => {
+    const nextState = !flashlightOn;
+    setFlashlightOn(nextState);
+
+    if (streamRef.current) {
+      const track = streamRef.current.getVideoTracks()[0];
+      if (track && typeof track.applyConstraints === 'function') {
+        try {
+          const capabilities = track.getCapabilities ? track.getCapabilities() : {};
+          if (capabilities.torch) {
+            await track.applyConstraints({
+              advanced: [{ torch: nextState }],
+            });
+          }
+        } catch (e) {
+          console.warn('Torch constraint warning:', e);
+        }
+      }
+    }
   };
 
   const handleConfirmPayment = (e) => {
@@ -131,7 +262,7 @@ export function QRScannerModal({
               {/* Flashlight button */}
               <button
                 type="button"
-                onClick={() => setFlashlightOn(!flashlightOn)}
+                onClick={handleToggleFlashlight}
                 className={`w-10 h-10 rounded-2xl flex items-center justify-center transition-all backdrop-blur-md active:scale-95 ${
                   flashlightOn
                     ? 'bg-amber-400 text-slate-950 shadow-lg shadow-amber-400/40'
@@ -144,32 +275,80 @@ export function QRScannerModal({
             </div>
 
             {/* Center: Camera Viewfinder with Scanner Animation */}
-            <div className="my-auto flex flex-col items-center justify-center z-10 py-4">
-              <div className="text-center mb-4">
-                <h3 className="text-lg font-extrabold text-white tracking-tight">
-                  Escanear código QR
+            <div className="my-auto flex flex-col items-center justify-center z-10 py-3">
+              <div className="text-center mb-3">
+                <h3 className="text-lg font-extrabold text-white tracking-tight flex items-center justify-center gap-2">
+                  <span>Escanear código QR</span>
+                  {cameraActive && (
+                    <span className="flex h-2.5 w-2.5 relative">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                      <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500" />
+                    </span>
+                  )}
                 </h3>
                 <p className="text-xs text-slate-400 mt-0.5">
-                  Apunta la cámara al QR del comercio o persona
+                  {cameraActive
+                    ? 'Cámara activa: Apunta al QR para cobrar'
+                    : 'Apunta la cámara al QR del comercio o persona'}
                 </p>
               </div>
 
               {/* Viewfinder Box */}
-              <div className="relative w-64 h-64 sm:w-72 sm:h-72 rounded-3xl border-2 border-indigo-500/50 bg-black/40 backdrop-blur-xs flex items-center justify-center overflow-hidden shadow-2xl shadow-indigo-950/80">
+              <div className="relative w-64 h-64 sm:w-72 sm:h-72 rounded-3xl border-2 border-indigo-500/60 bg-black/60 backdrop-blur-xs flex items-center justify-center overflow-hidden shadow-2xl shadow-indigo-950/80">
+                {/* Real Live Video Feed from Browser Camera */}
+                {cameraActive ? (
+                  <video
+                    ref={videoRef}
+                    autoPlay
+                    playsInline
+                    muted
+                    className="absolute inset-0 w-full h-full object-cover z-0"
+                  />
+                ) : (
+                  /* QR Placeholder Watermark when camera is inactive */
+                  <QrCode className="w-32 h-32 text-indigo-400/20" />
+                )}
+
+                {/* Loading state while browser prompt is open */}
+                {cameraLoading && (
+                  <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-xs flex flex-col items-center justify-center z-25 p-4 text-center">
+                    <Loader2 className="w-8 h-8 text-indigo-400 animate-spin mb-2" />
+                    <p className="text-xs text-white font-semibold">
+                      Solicitando acceso a la cámara...
+                    </p>
+                    <span className="text-[10px] text-slate-400 mt-1">
+                      Acepta el permiso en tu navegador para continuar
+                    </span>
+                  </div>
+                )}
+
+                {/* Camera error / Denied permission badge */}
+                {cameraError && (
+                  <div className="absolute inset-0 bg-slate-950/90 flex flex-col items-center justify-center z-25 p-4 text-center">
+                    <AlertCircle className="w-8 h-8 text-amber-400 mb-2" />
+                    <p className="text-xs text-slate-200 font-semibold mb-1">
+                      {cameraError}
+                    </p>
+                    <span className="text-[10px] text-slate-400">
+                      Continuando con detección simulada...
+                    </span>
+                  </div>
+                )}
+
                 {/* 4 Corner Accents (Yape style) */}
-                <div className="absolute top-0 left-0 w-8 h-8 border-t-4 border-l-4 border-indigo-400 rounded-tl-2xl" />
-                <div className="absolute top-0 right-0 w-8 h-8 border-t-4 border-r-4 border-indigo-400 rounded-tr-2xl" />
-                <div className="absolute bottom-0 left-0 w-8 h-8 border-b-4 border-l-4 border-indigo-400 rounded-bl-2xl" />
-                <div className="absolute bottom-0 right-0 w-8 h-8 border-b-4 border-r-4 border-indigo-400 rounded-br-2xl" />
+                <div className="absolute top-0 left-0 w-8 h-8 border-t-4 border-l-4 border-indigo-400 rounded-tl-2xl z-20 pointer-events-none" />
+                <div className="absolute top-0 right-0 w-8 h-8 border-t-4 border-r-4 border-indigo-400 rounded-tr-2xl z-20 pointer-events-none" />
+                <div className="absolute bottom-0 left-0 w-8 h-8 border-b-4 border-l-4 border-indigo-400 rounded-bl-2xl z-20 pointer-events-none" />
+                <div className="absolute bottom-0 right-0 w-8 h-8 border-b-4 border-r-4 border-indigo-400 rounded-br-2xl z-20 pointer-events-none" />
 
                 {/* Animated Laser Scanning Line */}
-                <div className="absolute left-3 right-3 h-0.5 bg-gradient-to-r from-transparent via-cyan-400 to-transparent shadow-[0_0_12px_#22d3ee] animate-pulse top-1/2 -translate-y-1/2" />
-
-                {/* QR Background Watermark */}
-                <QrCode className="w-32 h-32 text-indigo-400/15" />
+                <div
+                  className="absolute left-3 right-3 h-1 bg-gradient-to-r from-transparent via-cyan-400 to-transparent shadow-[0_0_15px_#22d3ee] z-20 pointer-events-none"
+                  style={{ animation: 'scanLine 2s ease-in-out infinite' }}
+                />
 
                 {/* Balance display badge */}
-                <div className="absolute bottom-3 px-3 py-1 rounded-full bg-slate-950/80 border border-white/10 backdrop-blur-md">
+                <div className="absolute bottom-3 px-3 py-1 rounded-full bg-slate-950/85 border border-white/10 backdrop-blur-md z-20 pointer-events-none shadow-md">
                   <span className="text-[11px] text-slate-300 font-mono">
                     Disponible: <strong className="text-emerald-400 font-bold">{formatCurrency(availableBalance)}</strong>
                   </span>
@@ -177,23 +356,50 @@ export function QRScannerModal({
               </div>
 
               {/* Bottom Quick Triggers */}
-              <div className="flex items-center gap-3 mt-6">
+              <div className="flex flex-col sm:flex-row items-center gap-2.5 mt-5 w-full max-w-xs">
                 <button
                   type="button"
-                  onClick={() => handleSimulateScan(18.50)}
-                  className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-lg shadow-indigo-600/30 active:scale-95 transition-all"
+                  onClick={() => handleStartCameraAndScan(24.50)}
+                  disabled={cameraLoading}
+                  className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-500 active:scale-95 text-white font-extrabold text-xs sm:text-sm shadow-lg shadow-indigo-600/35 transition-all disabled:opacity-60 cursor-pointer"
                 >
-                  <Sparkles className="w-4 h-4 text-cyan-300" />
-                  <span>Simular Escaneo QR</span>
+                  {cameraLoading ? (
+                    <Loader2 className="w-4 h-4 animate-spin text-white" />
+                  ) : cameraActive ? (
+                    <Sparkles className="w-4 h-4 text-cyan-300 animate-pulse" />
+                  ) : (
+                    <Camera className="w-4 h-4 text-cyan-300" />
+                  )}
+                  <span>
+                    {cameraActive
+                      ? 'Detectando QR en vivo...'
+                      : 'Simular Escaneo QR'}
+                  </span>
                 </button>
 
-                <button
-                  type="button"
-                  onClick={() => setViewState('CONFIRM')}
-                  className="flex items-center gap-1.5 px-4 py-2.5 rounded-2xl bg-white/10 hover:bg-white/20 text-white font-semibold text-xs border border-white/10 active:scale-95 transition-all"
-                >
-                  <span>Ingresar Monto</span>
-                </button>
+                <div className="flex items-center gap-2 w-full">
+                  {cameraActive && (
+                    <button
+                      type="button"
+                      onClick={() => handleSimulateScan(24.50)}
+                      className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-md shadow-emerald-600/30 active:scale-95 transition-all"
+                    >
+                      <Sparkles className="w-3.5 h-3.5" />
+                      <span>Detectar Ya</span>
+                    </button>
+                  )}
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      stopCamera();
+                      setViewState('CONFIRM');
+                    }}
+                    className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-2xl bg-white/10 hover:bg-white/20 text-white font-semibold text-xs border border-white/10 active:scale-95 transition-all"
+                  >
+                    <span>Ingresar Monto</span>
+                  </button>
+                </div>
               </div>
             </div>
 

@@ -43,17 +43,12 @@ export function PocketCard({ stats, onSelectPocket, onOpenQRPay }) {
       }}
       className={`group relative rounded-3xl p-4 sm:p-5 transition-all duration-200 cursor-pointer text-left active:scale-[0.98] border backdrop-blur-xl flex flex-col justify-between min-h-[160px] sm:min-h-[175px] ${cardBorder} ${cardBg}`}
     >
-      {/* Top row: Icon, Category Name, and Top-Right 'QR' button to pay like Yape */}
-      <div className="flex items-center justify-between gap-2 mb-3">
-        <div className="flex items-center gap-2.5 min-w-0">
-          <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-2xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 shadow-xs ${
-            isOutOfFunds ? 'bg-rose-100 text-rose-600 dark:bg-rose-500/20 dark:text-rose-400' : `${theme.bgLight} ${theme.text}`
-          }`}>
-            <CategoryIcon iconName={category.iconName} className="w-4.5 h-4.5 sm:w-5 sm:h-5" />
-          </div>
-          <h3 className="font-extrabold text-sm sm:text-base text-slate-900 dark:text-white tracking-tight truncate leading-tight group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
-            {category.name}
-          </h3>
+      {/* Top row: Icon on left, dedicated QR Payment button on right */}
+      <div className="flex items-center justify-between gap-2 mb-2">
+        <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-2xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 shadow-xs ${
+          isOutOfFunds ? 'bg-rose-100 text-rose-600 dark:bg-rose-500/20 dark:text-rose-400' : `${theme.bgLight} ${theme.text}`
+        }`}>
+          <CategoryIcon iconName={category.iconName} className="w-4.5 h-4.5 sm:w-5 sm:h-5" />
         </div>
 
         {/* Top-Right: dedicated QR Payment button (como en Yape) */}
@@ -69,6 +64,13 @@ export function PocketCard({ stats, onSelectPocket, onOpenQRPay }) {
         >
           <QrCode className="w-4.5 h-4.5 sm:w-5 sm:h-5 transition-transform group-hover/qr:scale-110 duration-200" />
         </button>
+      </div>
+
+      {/* Pocket Name - Spans full width so long names are completely visible */}
+      <div className="mb-2">
+        <h3 className="font-extrabold text-sm sm:text-base text-slate-900 dark:text-white tracking-tight leading-snug group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+          {category.name}
+        </h3>
       </div>
 
       {/* Center: Available Balance */}
