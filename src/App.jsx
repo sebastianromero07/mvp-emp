@@ -12,6 +12,7 @@ import { BudgetModal } from './components/BudgetModal';
 import { QuickExpenseModal } from './components/QuickExpenseModal';
 import { QRScannerModal } from './components/QRScannerModal';
 import { CreatePocketModal } from './components/CreatePocketModal';
+import { SplashScreen } from './components/SplashScreen';
 import { Toast } from './components/Toast';
 import { formatCurrency } from './utils/formatters';
 import { AlertTriangle, Plus } from 'lucide-react';
@@ -28,6 +29,7 @@ export default function App() {
     depositToGoal,
     deleteGoal,
     reorderGoals,
+    updateGoalStrategy,
     addExpense,
     deleteExpense,
     updateBudgets,
@@ -36,6 +38,7 @@ export default function App() {
     resetToSeedData,
   } = useWallet();
 
+  const [showSplash, setShowSplash] = useState(true);
   const [activeTab, setActiveTab] = useState('billetera'); // 'reporte' | 'billetera' | 'objetivos'
   const [selectedPocketId, setSelectedPocketId] = useState(null); // When user taps a pocket card to view its dedicated space
   const [selectedCategory, setSelectedCategory] = useState(CATEGORIES[0].id);
@@ -288,6 +291,7 @@ export default function App() {
               onUpdateSaved={handleDepositToGoal}
               onDeleteGoal={handleDeleteGoal}
               onReorderGoals={reorderGoals}
+              onUpdateGoalStrategy={updateGoalStrategy}
             />
           </div>
         )}
@@ -340,6 +344,9 @@ export default function App() {
 
       {/* Floating Feedback Toast */}
       <Toast toast={toast} onClose={() => setToast(null)} />
+
+      {/* Netflix-Style Splash Screen upon opening the app */}
+      {showSplash && <SplashScreen onComplete={() => setShowSplash(false)} />}
     </div>
   );
 }

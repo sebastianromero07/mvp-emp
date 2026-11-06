@@ -17,6 +17,7 @@ const INITIAL_GOALS = [
     currentAmount: 4200,
     icon: 'car',
     term: 'Mediano plazo',
+    strategy: 'Ahorro natural',
     imageUrl: 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=800&q=80',
     badge: 'META ACTIVA',
   },
@@ -28,6 +29,7 @@ const INITIAL_GOALS = [
     currentAmount: 2250,
     icon: 'emergency',
     term: 'Corto plazo',
+    strategy: 'Cuenta de alto rendimiento',
     imageUrl: 'https://images.unsplash.com/photo-1515694346937-94d85e41e6f0?auto=format&fit=crop&w=800&q=80',
     badge: '75% COMPLETADO',
   },
@@ -39,6 +41,7 @@ const INITIAL_GOALS = [
     currentAmount: 1000,
     icon: 'trip',
     term: 'Corto plazo',
+    strategy: null,
     imageUrl: 'https://images.unsplash.com/photo-1436491865332-7a61a109cc05?auto=format&fit=crop&w=800&q=80',
     badge: '40% COMPLETADO',
   },
@@ -50,6 +53,7 @@ const INITIAL_GOALS = [
     currentAmount: 1500,
     icon: 'study',
     term: 'Mediano plazo',
+    strategy: null,
     imageUrl: 'https://images.unsplash.com/photo-1497633762265-9d179a990aa6?auto=format&fit=crop&w=800&q=80',
     badge: 'PLANIFICACIÓN',
   },
@@ -184,6 +188,13 @@ export function useWallet() {
     if (Array.isArray(newGoals) && newGoals.length > 0) {
       setGoals(newGoals);
     }
+  };
+
+  // Update investment strategy for a goal
+  const updateGoalStrategy = (goalId, strategy) => {
+    setGoals((prev) =>
+      prev.map((g) => (g.id === goalId ? { ...g, strategy } : g))
+    );
   };
 
   // Compute pocket statistics
@@ -370,5 +381,6 @@ export function useWallet() {
     depositToGoal,
     deleteGoal,
     reorderGoals,
+    updateGoalStrategy,
   };
 }

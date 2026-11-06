@@ -16,9 +16,47 @@ import {
   TrendingUp,
   X,
   Compass,
-  GripVertical
+  GripVertical,
+  Check
 } from 'lucide-react';
 import { formatCurrency } from '../utils/formatters';
+
+// Available investment strategies requested by the user (including 'Ahorro natural')
+export const INVESTMENT_STRATEGIES = [
+  'Ahorro natural',
+  'Cuenta de alto rendimiento',
+  'Renta fija',
+  'Bonos soberanos',
+  'Acciones',
+  'ETFs',
+];
+
+export const STRATEGY_DETAILS = {
+  'Ahorro natural': {
+    desc: 'Separar dinero mes a mes sin instrumentos de inversión',
+    badge: 'Sin riesgo',
+  },
+  'Cuenta de alto rendimiento': {
+    desc: 'Cuentas remuneradas con disponibilidad y tasa preferencial',
+    badge: 'Liquidez alta',
+  },
+  'Renta fija': {
+    desc: 'Plazos fijos y rendimientos predecibles garantizados',
+    badge: 'Bajo riesgo',
+  },
+  'Bonos soberanos': {
+    desc: 'Títulos públicos de deuda y respaldo estatal',
+    badge: 'Seguridad estatal',
+  },
+  'Acciones': {
+    desc: 'Inversión en empresas con potencial de crecimiento de capital',
+    badge: 'Mayor rentabilidad',
+  },
+  'ETFs': {
+    desc: 'Fondos cotizados con diversificación automática por índices',
+    badge: 'Diversificado',
+  },
+};
 
 // Predefined Goal Templates with representative background images (matching the user's reference)
 export const PREDEFINED_GOALS = [
@@ -122,13 +160,54 @@ const ICONS_MAP = {
   birthday: Gift,
 };
 
-export function GoalsView({ goals = [], onAddGoal, onUpdateSaved, onDeleteGoal, onReorderGoals }) {
+export function GoalsView({
+  goals = [],
+  onAddGoal,
+  onUpdateSaved,
+  onDeleteGoal,
+  onReorderGoals,
+  onUpdateGoalStrategy,
+}) {
   const [isCreating, setIsCreating] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState(PREDEFINED_GOALS[0]);
   const [customTitle, setCustomTitle] = useState('');
   const [targetAmount, setTargetAmount] = useState('');
   const [initialAmount, setInitialAmount] = useState('');
+  const [creationStrategy, setCreationStrategy] = useState(null);
   const [selectedTerm, setSelectedTerm] = useState('Todas'); // 'Todas' | 'Corto plazo' | 'Mediano plazo' | 'Largo plazo'
+
+  // Selected goal to configure strategy ("¿Cómo cumplir tu objetivo?")
+  const [strategyGoal, setStrategyGoal] = useState(null);
+
+  // Transient feedback when a strategy is selected (appears and vanishes almost instantly)
+  const [feedbackNotification, setFeedbackNotification] = useState(null); // { goalId, strategy }
+  const feedbackTimerRef = useRef(null);
+
+  const handleSelectStrategy = (goalId, strategy) => {
+    if (onUpdateGoalStrategy) {
+      onUpdateGoalStrategy(goalId, strategy);
+    }
+
+    // Haptic feedback
+    try {
+      if (typeof navigator !== 'undefined' && navigator.vibrate) {
+        navigator.vibrate(35);
+      }
+    } catch {}
+
+    // Show visual feedback check inside the modal
+    if (feedbackTimerRef.current) clearTimeout(feedbackTimerRef.current);
+    setFeedbackNotification({ goalId, strategy });
+
+    // Update strategyGoal so selected checkmark reflects immediately
+    setStrategyGoal((prev) => (prev && prev.id === goalId ? { ...prev, strategy } : prev));
+
+    // Closes modal and dismisses feedback after 1.1s
+    feedbackTimerRef.current = setTimeout(() => {
+      setFeedbackNotification(null);
+      setStrategyGoal(null);
+    }, 1100);
+  };
 
   // Drag and drop state
   const [dragIndex, setDragIndex] = useState(null);
@@ -372,11 +451,13 @@ export function GoalsView({ goals = [], onAddGoal, onUpdateSaved, onDeleteGoal, 
       term: selectedTemplate.term,
       imageUrl: selectedTemplate.imageUrl,
       badge: selectedTemplate.badge,
+      strategy: creationStrategy || null,
     });
 
     setTargetAmount('');
     setInitialAmount('');
     setCustomTitle('');
+    setCreationStrategy(null);
     setIsCreating(false);
   };
 
@@ -575,6 +656,33 @@ export function GoalsView({ goals = [], onAddGoal, onUpdateSaved, onDeleteGoal, 
                   className="w-full bg-slate-100 dark:bg-slate-950/80 border border-slate-300 dark:border-slate-700/80 rounded-2xl px-3.5 py-2 text-xs font-mono text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500"
                 />
               </div>
+
+              <div>
+                <label className="block text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 mb-1.5 flex items-center gap-1">
+                  <TrendingUp className="w-3.5 h-3.5 text-emerald-500" />
+                  <span>¿Cómo cumplir tu objetivo? (Opcional)</span>
+                </label>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
+                  {INVESTMENT_STRATEGIES.map((strat) => {
+                    const isSel = creationStrategy === strat;
+                    return (
+                      <button
+                        key={strat}
+                        type="button"
+                        onClick={() => setCreationStrategy(isSel ? null : strat)}
+                        className={`p-2 rounded-xl border text-left text-[11px] font-bold transition-all flex items-center justify-between cursor-pointer ${
+                          isSel
+                            ? 'bg-emerald-500/15 border-emerald-500 text-emerald-600 dark:text-emerald-400'
+                            : 'bg-slate-50 dark:bg-slate-950/80 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:border-slate-300'
+                        }`}
+                      >
+                        <span className="truncate">{strat}</span>
+                        {isSel && <Check className="w-3 h-3 text-emerald-500 shrink-0" />}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
             </div>
 
             <div className="flex gap-2 pt-2">
@@ -645,6 +753,11 @@ export function GoalsView({ goals = [], onAddGoal, onUpdateSaved, onDeleteGoal, 
                   onDragEnd={handleDragEnd}
                   onDrop={handleDrop}
                   onTouchStart={(e) => handleTouchStart(index, e)}
+                  onClick={() => {
+                    if (!touchStateRef.current.isDragging && dragIndex === null) {
+                      setStrategyGoal(goal);
+                    }
+                  }}
                   style={{ touchAction: isTouchDragging ? 'none' : 'pan-y' }}
                   className={`relative rounded-3xl overflow-hidden border border-slate-200 dark:border-slate-800 shadow-md group transition-all duration-200 flex flex-col justify-between min-h-[190px] sm:min-h-[210px] cursor-grab active:cursor-grabbing select-none ${
                     isBeingDragged
@@ -757,6 +870,23 @@ export function GoalsView({ goals = [], onAddGoal, onUpdateSaved, onDeleteGoal, 
                         </button>
                       )}
                     </div>
+
+                    {/* Pastilla en la parte de abajo de cada casilla SOLO SI se definió el método */}
+                    {goal.strategy ? (
+                      <div className="pt-2 flex items-center">
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setStrategyGoal(goal);
+                          }}
+                          className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] sm:text-[11px] font-extrabold bg-emerald-500/25 hover:bg-emerald-500/35 text-emerald-300 border border-emerald-500/35 backdrop-blur-md shadow-xs active:scale-95 transition-all cursor-pointer"
+                        >
+                          <TrendingUp className="w-3 h-3 text-emerald-400" />
+                          <span>{goal.strategy}</span>
+                        </button>
+                      </div>
+                    ) : null}
                   </div>
                 </div>
               );
@@ -764,6 +894,95 @@ export function GoalsView({ goals = [], onAddGoal, onUpdateSaved, onDeleteGoal, 
           </div>
         )}
       </section>
+
+      {/* ========================================================= */}
+      {/* MODAL: ¿CÓMO CUMPLIR TU OBJETIVO? (ELECCIÓN DENTRO DE LA CAJA) */}
+      {/* ========================================================= */}
+      {strategyGoal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fade-in">
+          <div className="w-full max-w-md rounded-3xl bg-slate-900 border border-slate-800 p-5 sm:p-6 shadow-2xl space-y-4 text-white relative animate-scale-up">
+            {/* Header */}
+            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+              <div>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-400 block">
+                  {strategyGoal.title}
+                </span>
+                <h3 className="text-base sm:text-lg font-extrabold text-white tracking-tight flex items-center gap-1.5">
+                  <TrendingUp className="w-4 h-4 text-emerald-400" />
+                  <span>¿Cómo cumplir tu objetivo?</span>
+                </h3>
+                <p className="text-xs text-slate-400 mt-0.5">
+                  Elige el método o instrumento financiero para esta meta.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setStrategyGoal(null)}
+                className="p-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white transition-all cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Choices List */}
+            <div className="space-y-2 max-h-[60vh] overflow-y-auto no-scrollbar pr-0.5">
+              {INVESTMENT_STRATEGIES.map((strategy) => {
+                const isSelected = strategyGoal.strategy === strategy;
+                const details = STRATEGY_DETAILS[strategy] || {};
+
+                return (
+                  <button
+                    key={strategy}
+                    type="button"
+                    onClick={() => handleSelectStrategy(strategyGoal.id, strategy)}
+                    className={`w-full p-3.5 rounded-2xl border text-left flex items-center justify-between transition-all active:scale-[0.98] cursor-pointer ${
+                      isSelected
+                        ? 'bg-emerald-500/20 border-emerald-400 text-white ring-1 ring-emerald-400/50 shadow-lg shadow-emerald-950/50'
+                        : 'bg-slate-950/60 hover:bg-slate-800/80 border-slate-800 text-slate-200 hover:border-slate-700'
+                    }`}
+                  >
+                    <div className="min-w-0 pr-2">
+                      <div className="flex items-center gap-2 mb-0.5">
+                        <span className="font-extrabold text-xs sm:text-sm text-white">
+                          {strategy}
+                        </span>
+                        {details.badge && (
+                          <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-white/10 text-emerald-300">
+                            {details.badge}
+                          </span>
+                        )}
+                      </div>
+                      {details.desc && (
+                        <p className="text-[11px] text-slate-400 leading-tight">
+                          {details.desc}
+                        </p>
+                      )}
+                    </div>
+
+                    <div className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 border transition-all ${
+                      isSelected
+                        ? 'bg-emerald-500 border-emerald-400 text-slate-950 shadow-sm'
+                        : 'border-slate-700 bg-slate-900/80 text-transparent'
+                    }`}>
+                      <Check className="w-3.5 h-3.5 stroke-[3]" />
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Transient Feedback Banner: Aparece y desaparece casi al instante */}
+            {feedbackNotification && feedbackNotification.goalId === strategyGoal.id && (
+              <div className="absolute inset-0 z-20 bg-slate-950/85 backdrop-blur-xs rounded-3xl flex items-center justify-center p-4 animate-fade-in pointer-events-none">
+                <div className="px-5 py-3.5 rounded-2xl bg-emerald-500 text-slate-950 font-black text-sm flex items-center gap-2.5 shadow-2xl shadow-emerald-500/50 border border-emerald-300 animate-scale-up text-center">
+                  <CheckCircle2 className="w-5 h-5 stroke-[2.5] shrink-0" />
+                  <span>✓ {feedbackNotification.strategy} guardado</span>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Quick Deposit Modal */}
       {depositGoalId && (
