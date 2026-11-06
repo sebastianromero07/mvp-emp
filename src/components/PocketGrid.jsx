@@ -7,6 +7,7 @@ export function PocketGrid({
   pocketStats,
   onReorder,
   onSelectPocket,
+  onOpenQRPay,
   onOpenExpenseModal,
 }) {
   const [dragIndex, setDragIndex] = useState(null);
@@ -227,7 +228,7 @@ export function PocketGrid({
                   onSelectPocket(catId);
                 }
               }}
-              onOpenExpenseModal={onOpenExpenseModal}
+              onOpenQRPay={onOpenQRPay || onOpenExpenseModal}
             />
 
             {/* Subtle Drag Grip Handle Indicator */}

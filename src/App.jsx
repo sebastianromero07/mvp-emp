@@ -10,6 +10,7 @@ import { GoalsView } from './components/GoalsView';
 import { NavigationFooter } from './components/NavigationFooter';
 import { BudgetModal } from './components/BudgetModal';
 import { QuickExpenseModal } from './components/QuickExpenseModal';
+import { QRScannerModal } from './components/QRScannerModal';
 import { CreatePocketModal } from './components/CreatePocketModal';
 import { Toast } from './components/Toast';
 import { formatCurrency } from './utils/formatters';
@@ -39,6 +40,8 @@ export default function App() {
   const [selectedPocketId, setSelectedPocketId] = useState(null); // When user taps a pocket card to view its dedicated space
   const [selectedCategory, setSelectedCategory] = useState(CATEGORIES[0].id);
   const [isExpenseModalOpen, setIsExpenseModalOpen] = useState(false);
+  const [isQRPayOpen, setIsQRPayOpen] = useState(false);
+  const [qrPocketId, setQrPocketId] = useState(null);
   const [isCreatePocketOpen, setIsCreatePocketOpen] = useState(false);
   const [isConfigOpen, setIsConfigOpen] = useState(false);
   const [toast, setToast] = useState(null);
@@ -50,6 +53,11 @@ export default function App() {
   const handleOpenExpenseModal = (catId) => {
     setSelectedCategory(catId || categories[0]?.id || CATEGORIES[0].id);
     setIsExpenseModalOpen(true);
+  };
+
+  const handleOpenQRPay = (catId) => {
+    setQrPocketId(catId || categories[0]?.id || CATEGORIES[0].id);
+    setIsQRPayOpen(true);
   };
 
   const handleCreatePocket = (pocketData) => {
@@ -192,18 +200,18 @@ export default function App() {
             />
           ) : (
             <div className="space-y-4 animate-fade-in">
-              {/* Compact Balance Ribbon - Centered without PiggyBank icon */}
-              <div className="rounded-2xl glass-card p-4 sm:p-5 border border-slate-200/90 dark:border-slate-800/80 shadow-xs dark:shadow-none flex flex-col items-center justify-center text-center">
-                <span className="text-[10px] sm:text-[11px] uppercase tracking-wider text-slate-500 dark:text-slate-400 font-semibold block mb-1">
+              {/* Prominent Balance Ribbon - Centered without PiggyBank icon */}
+              <div className="rounded-3xl glass-card p-5 sm:p-6 border border-slate-200/90 dark:border-slate-800/80 shadow-md dark:shadow-none flex flex-col items-center justify-center text-center">
+                <span className="text-xs sm:text-sm uppercase tracking-widest text-slate-500 dark:text-slate-400 font-extrabold block mb-1.5">
                   Saldo Total Disponible
                 </span>
-                <div className="flex items-baseline justify-center gap-2">
-                  <span className={`text-2xl sm:text-3xl font-black font-mono tracking-tight ${
+                <div className="flex items-baseline justify-center gap-2.5">
+                  <span className={`text-3xl sm:text-4xl md:text-5xl font-black font-mono tracking-tight leading-none ${
                     summary.totalAvailable < 0 ? 'text-rose-600 dark:text-rose-400' : 'text-slate-900 dark:text-white'
                   }`}>
                     {formatCurrency(summary.totalAvailable)}
                   </span>
-                  <span className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 font-semibold font-mono">
+                  <span className="text-sm sm:text-base text-slate-500 dark:text-slate-400 font-bold font-mono">
                     / {formatCurrency(summary.totalBudget)}
                   </span>
                 </div>
@@ -211,22 +219,22 @@ export default function App() {
 
               {/* 2. Pocket Cards in 2x2 GRID with Drag & Drop */}
               <section aria-label="Bolsillos de Presupuesto">
-                <div className="flex items-center justify-between mb-2.5 px-0.5">
-                  <div className="flex items-center gap-2">
-                    <h2 className="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider">
+                <div className="flex items-center justify-between mb-3 px-1">
+                  <div className="flex items-center gap-2.5">
+                    <h2 className="text-sm sm:text-base font-black text-slate-900 dark:text-white uppercase tracking-wider">
                       TUS BOLSILLOS
                     </h2>
-                    <span className="text-[10px] text-slate-400 dark:text-slate-500 font-normal">
+                    <span className="text-xs text-slate-400 dark:text-slate-500 font-medium">
                       · Arrastra para ordenar
                     </span>
                   </div>
                   
                   <button
                     onClick={handleTriggerTestOverdraft}
-                    className="text-[10px] sm:text-[11px] text-amber-600 hover:text-amber-700 dark:text-amber-400/90 dark:hover:text-amber-300 transition-colors flex items-center gap-1 font-medium hover:underline"
+                    className="text-xs text-amber-600 hover:text-amber-700 dark:text-amber-400/90 dark:hover:text-amber-300 transition-colors flex items-center gap-1.5 font-bold hover:underline"
                     title="Simula un gasto superior al saldo para verificar alerta"
                   >
-                    <AlertTriangle className="w-3 h-3" />
+                    <AlertTriangle className="w-3.5 h-3.5" />
                     <span>Probar sobregiro</span>
                   </button>
                 </div>
@@ -240,18 +248,19 @@ export default function App() {
                     setSelectedPocketId(catId);
                     scrollToTop();
                   }}
+                  onOpenQRPay={handleOpenQRPay}
                   onOpenExpenseModal={(catId) => handleOpenExpenseModal(catId)}
                 />
               </section>
 
               {/* Action Button: Crear Bolsillo */}
-              <div className="pt-1">
+              <div className="pt-2">
                 <button
                   type="button"
                   onClick={() => setIsCreatePocketOpen(true)}
-                  className="w-full py-3.5 px-4 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-md shadow-indigo-600/25 active:scale-[0.98] transition-all cursor-pointer"
+                  className="w-full py-4 px-5 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-sm sm:text-base flex items-center justify-center gap-2.5 shadow-lg shadow-indigo-600/30 active:scale-[0.98] transition-all cursor-pointer"
                 >
-                  <Plus className="w-4 h-4" />
+                  <Plus className="w-5 h-5 stroke-[2.5]" />
                   <span>Crear Bolsillo</span>
                 </button>
               </div>
@@ -312,6 +321,16 @@ export default function App() {
         categoryId={selectedCategory}
         onAddExpense={handleAddExpense}
         pocketStats={pocketStats}
+      />
+
+      {/* Yape-Style QR Scanner & Payment Flow Modal */}
+      <QRScannerModal
+        isOpen={isQRPayOpen}
+        onClose={() => setIsQRPayOpen(false)}
+        categoryId={qrPocketId}
+        categories={categories}
+        pocketStats={pocketStats}
+        onPayExpense={handleAddExpense}
       />
 
       {/* Budget Configuration / Month Reset Modal */}
