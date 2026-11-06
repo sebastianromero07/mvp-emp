@@ -3,18 +3,21 @@ import { useWallet } from './hooks/useWallet';
 import { CATEGORIES } from './constants/categories';
 import { Header } from './components/Header';
 import { PocketCard } from './components/PocketCard';
+import { PocketGrid } from './components/PocketGrid';
 import { PocketDetailView } from './components/PocketDetailView';
 import { ReportView } from './components/ReportView';
 import { GoalsView } from './components/GoalsView';
 import { NavigationFooter } from './components/NavigationFooter';
 import { BudgetModal } from './components/BudgetModal';
 import { QuickExpenseModal } from './components/QuickExpenseModal';
+import { CreatePocketModal } from './components/CreatePocketModal';
 import { Toast } from './components/Toast';
 import { formatCurrency } from './utils/formatters';
-import { AlertTriangle, PiggyBank, Plus } from 'lucide-react';
+import { AlertTriangle, Plus } from 'lucide-react';
 
 export default function App() {
   const {
+    categories,
     budgets,
     transactions,
     pocketStats,
@@ -23,9 +26,12 @@ export default function App() {
     addGoal,
     depositToGoal,
     deleteGoal,
+    reorderGoals,
     addExpense,
     deleteExpense,
     updateBudgets,
+    createPocket,
+    reorderCategories,
     resetToSeedData,
   } = useWallet();
 
@@ -33,6 +39,7 @@ export default function App() {
   const [selectedPocketId, setSelectedPocketId] = useState(null); // When user taps a pocket card to view its dedicated space
   const [selectedCategory, setSelectedCategory] = useState(CATEGORIES[0].id);
   const [isExpenseModalOpen, setIsExpenseModalOpen] = useState(false);
+  const [isCreatePocketOpen, setIsCreatePocketOpen] = useState(false);
   const [isConfigOpen, setIsConfigOpen] = useState(false);
   const [toast, setToast] = useState(null);
 
@@ -41,14 +48,23 @@ export default function App() {
   };
 
   const handleOpenExpenseModal = (catId) => {
-    setSelectedCategory(catId || CATEGORIES[0].id);
+    setSelectedCategory(catId || categories[0]?.id || CATEGORIES[0].id);
     setIsExpenseModalOpen(true);
+  };
+
+  const handleCreatePocket = (pocketData) => {
+    try {
+      const newPocket = createPocket(pocketData);
+      showToast(`Bolsillo "${newPocket.name}" creado con éxito ($${pocketData.budget.toFixed(2)}).`, 'success');
+    } catch (err) {
+      showToast(err.message, 'error');
+    }
   };
 
   const handleAddExpense = ({ categoryId, amount, description }) => {
     try {
       addExpense({ categoryId, amount, description });
-      const cat = CATEGORIES.find((c) => c.id === categoryId);
+      const cat = categories.find((c) => c.id === categoryId);
       showToast(`Gasto de $${amount.toFixed(2)} registrado en ${cat ? cat.name : 'Espacio'}.`, 'success');
     } catch (err) {
       showToast(err.message, 'error');
@@ -58,7 +74,7 @@ export default function App() {
   const handleDeleteExpense = (id) => {
     const deleted = deleteExpense(id);
     if (deleted) {
-      const cat = CATEGORIES.find((c) => c.id === deleted.categoryId);
+      const cat = categories.find((c) => c.id === deleted.categoryId);
       showToast(`Gasto de $${deleted.amount.toFixed(2)} eliminado y saldo restaurado en ${cat ? cat.name : 'su espacio'}.`, 'info');
     }
   };
@@ -159,13 +175,13 @@ export default function App() {
       }`}>
 
         {/* ========================================================= */}
-        {/* TAB 1: BILLETERA (Dashboard 4 Bolsillos O Espacio Propio)  */}
+        {/* TAB 1: BILLETERA (Dashboard Bolsillos O Espacio Propio)    */}
         {/* ========================================================= */}
         {activeTab === 'billetera' && (
           selectedPocketId ? (
             <PocketDetailView
-              category={CATEGORIES.find((c) => c.id === selectedPocketId) || CATEGORIES[0]}
-              stats={pocketStats[selectedPocketId] || pocketStats.alimentacion}
+              category={categories.find((c) => c.id === selectedPocketId) || categories[0] || CATEGORIES[0]}
+              stats={pocketStats[selectedPocketId] || pocketStats.alimentacion || Object.values(pocketStats)[0]}
               transactions={transactions}
               onBack={() => {
                 setSelectedPocketId(null);
@@ -176,37 +192,33 @@ export default function App() {
             />
           ) : (
             <div className="space-y-4 animate-fade-in">
-              {/* Compact Balance Ribbon */}
-              <div className="rounded-2xl glass-card p-3.5 border border-slate-200/90 dark:border-slate-800/80 shadow-xs dark:shadow-none flex items-center justify-between">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-xl bg-indigo-100 text-indigo-600 dark:bg-indigo-500/15 dark:text-indigo-400 flex items-center justify-center shrink-0">
-                    <PiggyBank className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <span className="text-[10px] uppercase tracking-wider text-slate-500 dark:text-slate-400 font-semibold block">
-                      Saldo Total Disponible
-                    </span>
-                    <div className="flex items-baseline gap-1.5">
-                      <span className={`text-xl sm:text-2xl font-extrabold font-mono tracking-tight ${
-                        summary.totalAvailable < 0 ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400'
-                      }`}>
-                        {formatCurrency(summary.totalAvailable)}
-                      </span>
-                      <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">
-                        / <span className="text-emerald-600 dark:text-emerald-400 font-semibold">{formatCurrency(summary.totalBudget)}</span>
-                      </span>
-                    </div>
-                  </div>
+              {/* Compact Balance Ribbon - Centered without PiggyBank icon */}
+              <div className="rounded-2xl glass-card p-4 sm:p-5 border border-slate-200/90 dark:border-slate-800/80 shadow-xs dark:shadow-none flex flex-col items-center justify-center text-center">
+                <span className="text-[10px] sm:text-[11px] uppercase tracking-wider text-slate-500 dark:text-slate-400 font-semibold block mb-1">
+                  Saldo Total Disponible
+                </span>
+                <div className="flex items-baseline justify-center gap-2">
+                  <span className={`text-2xl sm:text-3xl font-black font-mono tracking-tight ${
+                    summary.totalAvailable < 0 ? 'text-rose-600 dark:text-rose-400' : 'text-slate-900 dark:text-white'
+                  }`}>
+                    {formatCurrency(summary.totalAvailable)}
+                  </span>
+                  <span className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 font-semibold font-mono">
+                    / {formatCurrency(summary.totalBudget)}
+                  </span>
                 </div>
               </div>
 
-              {/* 2. Pocket Cards in 2x2 GRID */}
+              {/* 2. Pocket Cards in 2x2 GRID with Drag & Drop */}
               <section aria-label="Bolsillos de Presupuesto">
                 <div className="flex items-center justify-between mb-2.5 px-0.5">
-                  <div className="flex items-center gap-1.5">
+                  <div className="flex items-center gap-2">
                     <h2 className="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider">
-                      Tus Espacios Estancos
+                      TUS BOLSILLOS
                     </h2>
+                    <span className="text-[10px] text-slate-400 dark:text-slate-500 font-normal">
+                      · Arrastra para ordenar
+                    </span>
                   </div>
                   
                   <button
@@ -219,30 +231,28 @@ export default function App() {
                   </button>
                 </div>
 
-                {/* 2x2 GRID ALWAYS ON MOBILE & DESKTOP */}
-                <div className="grid grid-cols-2 gap-2 sm:gap-3">
-                  {CATEGORIES.map((cat) => (
-                    <PocketCard
-                      key={cat.id}
-                      stats={pocketStats[cat.id]}
-                      onSelectPocket={(catId) => {
-                        setSelectedPocketId(catId);
-                        scrollToTop();
-                      }}
-                      onOpenExpenseModal={(catId) => handleOpenExpenseModal(catId)}
-                    />
-                  ))}
-                </div>
+                {/* Interactive Drag & Drop Reorderable Grid */}
+                <PocketGrid
+                  categories={categories}
+                  pocketStats={pocketStats}
+                  onReorder={reorderCategories}
+                  onSelectPocket={(catId) => {
+                    setSelectedPocketId(catId);
+                    scrollToTop();
+                  }}
+                  onOpenExpenseModal={(catId) => handleOpenExpenseModal(catId)}
+                />
               </section>
 
-              {/* Quick Action Button */}
+              {/* Action Button: Crear Bolsillo */}
               <div className="pt-1">
                 <button
-                  onClick={() => handleOpenExpenseModal('alimentacion')}
-                  className="w-full py-3 px-4 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-md shadow-indigo-600/20 active:scale-[0.98] transition-all"
+                  type="button"
+                  onClick={() => setIsCreatePocketOpen(true)}
+                  className="w-full py-3.5 px-4 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-md shadow-indigo-600/25 active:scale-[0.98] transition-all cursor-pointer"
                 >
                   <Plus className="w-4 h-4" />
-                  <span>Registrar un Gasto en un Bolsillo</span>
+                  <span>Crear Bolsillo</span>
                 </button>
               </div>
             </div>
@@ -258,6 +268,7 @@ export default function App() {
               summary={summary}
               pocketStats={pocketStats}
               transactions={transactions}
+              categories={categories}
             />
           </div>
         )}
@@ -272,6 +283,7 @@ export default function App() {
               onAddGoal={handleAddGoal}
               onUpdateSaved={handleDepositToGoal}
               onDeleteGoal={handleDeleteGoal}
+              onReorderGoals={reorderGoals}
             />
           </div>
         )}
@@ -286,7 +298,14 @@ export default function App() {
         goalCount={goals.length}
       />
 
-      {/* Modal for adding expense directly when tapping a pocket '+' button or the action button */}
+      {/* Modal for creating a new pocket */}
+      <CreatePocketModal
+        isOpen={isCreatePocketOpen}
+        onClose={() => setIsCreatePocketOpen(false)}
+        onCreatePocket={handleCreatePocket}
+      />
+
+      {/* Modal for adding expense directly when tapping a pocket '+' button */}
       <QuickExpenseModal
         isOpen={isExpenseModalOpen}
         onClose={() => setIsExpenseModalOpen(false)}
@@ -300,6 +319,7 @@ export default function App() {
         isOpen={isConfigOpen}
         onClose={() => setIsConfigOpen(false)}
         currentBudgets={budgets}
+        categories={categories}
         onSaveBudgets={handleSaveBudgets}
         onResetToDemo={handleResetDemo}
       />

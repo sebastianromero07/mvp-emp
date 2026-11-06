@@ -4,7 +4,7 @@ import { CategoryIcon } from './CategoryIcon';
 import { formatCurrency } from '../utils/formatters';
 import { X, SlidersHorizontal, RotateCcw, Check, Sparkles, AlertCircle } from 'lucide-react';
 
-export function BudgetModal({ isOpen, onClose, currentBudgets, onSaveBudgets, onResetToDemo }) {
+export function BudgetModal({ isOpen, onClose, currentBudgets, onSaveBudgets, onResetToDemo, categories = CATEGORIES }) {
   const [draftBudgets, setDraftBudgets] = useState(currentBudgets);
   const [resetTransactions, setResetTransactions] = useState(false);
 
@@ -59,15 +59,15 @@ export function BudgetModal({ isOpen, onClose, currentBudgets, onSaveBudgets, on
               Presupuesto Mensual
             </h2>
             <p className="text-xs text-slate-500 dark:text-slate-400">
-              Asigna el límite de cada uno de tus 4 espacios estancos
+              Asigna el límite de cada uno de tus espacios estancos
             </p>
           </div>
         </div>
 
         <form onSubmit={handleSubmit} className="mt-5 space-y-4">
-          {/* 4 category inputs */}
+          {/* Category inputs */}
           <div className="space-y-3">
-            {CATEGORIES.map((cat) => {
+            {categories.map((cat) => {
               const val = draftBudgets[cat.id] ?? 0;
               return (
                 <div

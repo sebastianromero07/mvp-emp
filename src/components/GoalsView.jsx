@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import {
   Target,
   Plus,
@@ -15,7 +15,8 @@ import {
   ShieldCheck,
   TrendingUp,
   X,
-  Compass
+  Compass,
+  GripVertical
 } from 'lucide-react';
 import { formatCurrency } from '../utils/formatters';
 
@@ -121,7 +122,7 @@ const ICONS_MAP = {
   birthday: Gift,
 };
 
-export function GoalsView({ goals = [], onAddGoal, onUpdateSaved, onDeleteGoal }) {
+export function GoalsView({ goals = [], onAddGoal, onUpdateSaved, onDeleteGoal, onReorderGoals }) {
   const [isCreating, setIsCreating] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState(PREDEFINED_GOALS[0]);
   const [customTitle, setCustomTitle] = useState('');
@@ -129,19 +130,194 @@ export function GoalsView({ goals = [], onAddGoal, onUpdateSaved, onDeleteGoal }
   const [initialAmount, setInitialAmount] = useState('');
   const [selectedTerm, setSelectedTerm] = useState('Todas'); // 'Todas' | 'Corto plazo' | 'Mediano plazo' | 'Largo plazo'
 
+  // Drag and drop state
+  const [dragIndex, setDragIndex] = useState(null);
+  const [dropIndex, setDropIndex] = useState(null);
+  const [isTouchDragging, setIsTouchDragging] = useState(false);
+
+  const touchTimerRef = useRef(null);
+  const touchStateRef = useRef({
+    startX: 0,
+    startY: 0,
+    fromIndex: null,
+    isDragging: false,
+  });
+
   // Deposit modal state
   const [depositGoalId, setDepositGoalId] = useState(null);
   const [depositAmount, setDepositAmount] = useState('');
-
-  const totalSaved = goals.reduce((acc, g) => acc + (Number(g.currentAmount) || 0), 0);
-  const totalTarget = goals.reduce((acc, g) => acc + (Number(g.targetAmount) || 0), 0);
-  const totalProgress = totalTarget > 0 ? (totalSaved / totalTarget) * 100 : 0;
 
   // Filter goals by horizon
   const filteredGoals = goals.filter((g) => {
     if (selectedTerm === 'Todas') return true;
     return (g.term || 'Mediano plazo') === selectedTerm;
   });
+
+  // Live preview of goals reordering
+  const displayGoals = useMemo(() => {
+    if (dragIndex === null || dropIndex === null || dragIndex === dropIndex) {
+      return filteredGoals;
+    }
+    const result = [...filteredGoals];
+    const [moved] = result.splice(dragIndex, 1);
+    result.splice(dropIndex, 0, moved);
+    return result;
+  }, [filteredGoals, dragIndex, dropIndex]);
+
+  useEffect(() => {
+    return () => {
+      if (touchTimerRef.current) clearTimeout(touchTimerRef.current);
+    };
+  }, []);
+
+  const commitReorder = (newFilteredList) => {
+    if (!onReorderGoals) return;
+    if (selectedTerm === 'Todas') {
+      onReorderGoals(newFilteredList);
+      return;
+    }
+    const updated = [];
+    let fIdx = 0;
+    goals.forEach((g) => {
+      if ((g.term || 'Mediano plazo') === selectedTerm) {
+        if (fIdx < newFilteredList.length) {
+          updated.push(newFilteredList[fIdx++]);
+        }
+      } else {
+        updated.push(g);
+      }
+    });
+    onReorderGoals(updated);
+  };
+
+  // Desktop Drag & Drop
+  const handleDragStart = (index, e) => {
+    if (e.target.closest('button')) {
+      e.preventDefault();
+      return;
+    }
+    setDragIndex(index);
+    setDropIndex(index);
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', String(index));
+  };
+
+  const handleDragEnter = (targetIndex, e) => {
+    e.preventDefault();
+    if (dragIndex !== null && targetIndex !== dropIndex) {
+      setDropIndex(targetIndex);
+    }
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  };
+
+  const handleDragEnd = () => {
+    if (dragIndex !== null && dropIndex !== null && dragIndex !== dropIndex) {
+      commitReorder(displayGoals);
+    }
+    setDragIndex(null);
+    setDropIndex(null);
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    if (dragIndex !== null && dropIndex !== null && dragIndex !== dropIndex) {
+      commitReorder(displayGoals);
+    }
+    setDragIndex(null);
+    setDropIndex(null);
+  };
+
+  // Mobile Touch Drag & Drop
+  const startDragFromTouch = (index) => {
+    touchStateRef.current.isDragging = true;
+    setIsTouchDragging(true);
+    setDragIndex(index);
+    setDropIndex(index);
+
+    try {
+      if (typeof navigator !== 'undefined' && navigator.vibrate) {
+        navigator.vibrate(30);
+      }
+    } catch {}
+  };
+
+  const handleTouchStart = (index, e) => {
+    if (e.target.closest('button')) return;
+
+    const touch = e.touches[0];
+    touchStateRef.current = {
+      startX: touch.clientX,
+      startY: touch.clientY,
+      fromIndex: index,
+      isDragging: false,
+    };
+
+    if (e.target.closest('[data-drag-handle]')) {
+      startDragFromTouch(index);
+      return;
+    }
+
+    touchTimerRef.current = setTimeout(() => {
+      startDragFromTouch(index);
+    }, 180);
+  };
+
+  const handleTouchMove = (e) => {
+    const touch = e.touches[0];
+    const dx = touch.clientX - touchStateRef.current.startX;
+    const dy = touch.clientY - touchStateRef.current.startY;
+    const dist = Math.hypot(dx, dy);
+
+    if (!touchStateRef.current.isDragging) {
+      if (dist > 8) {
+        if (touchTimerRef.current) {
+          clearTimeout(touchTimerRef.current);
+          touchTimerRef.current = null;
+        }
+      }
+      return;
+    }
+
+    if (e.cancelable) {
+      e.preventDefault();
+    }
+
+    const elUnder = document.elementFromPoint(touch.clientX, touch.clientY);
+    const cardEl = elUnder?.closest('[data-goal-index]');
+    if (cardEl) {
+      const targetIdx = parseInt(cardEl.getAttribute('data-goal-index'), 10);
+      if (!isNaN(targetIdx) && targetIdx !== dropIndex) {
+        setDropIndex(targetIdx);
+      }
+    }
+  };
+
+  const handleTouchEnd = () => {
+    if (touchTimerRef.current) {
+      clearTimeout(touchTimerRef.current);
+      touchTimerRef.current = null;
+    }
+
+    if (touchStateRef.current.isDragging) {
+      if (dragIndex !== null && dropIndex !== null && dragIndex !== dropIndex) {
+        commitReorder(displayGoals);
+        try {
+          if (typeof navigator !== 'undefined' && navigator.vibrate) {
+            navigator.vibrate(40);
+          }
+        } catch {}
+      }
+    }
+
+    touchStateRef.current.isDragging = false;
+    setIsTouchDragging(false);
+    setDragIndex(null);
+    setDropIndex(null);
+  };
 
   const handleSelectTemplate = (template) => {
     setSelectedTemplate(template);
@@ -205,7 +381,8 @@ export function GoalsView({ goals = [], onAddGoal, onUpdateSaved, onDeleteGoal }
               Tu camino financiero
             </h2>
             <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mt-0.5">
-              Visualiza y gestiona tus objetivos de ahorro con metas reales y progreso continuo.
+              Visualiza y gestiona tus objetivos
+              .
             </p>
           </div>
 
@@ -222,25 +399,6 @@ export function GoalsView({ goals = [], onAddGoal, onUpdateSaved, onDeleteGoal }
             <span>Nueva Meta</span>
           </button>
         </div>
-
-        {/* Global Progress Bar */}
-        <div className="pt-2 border-t border-slate-100 dark:border-slate-800/80">
-          <div className="flex justify-between items-center text-[10px] text-slate-500 dark:text-slate-400 font-medium mb-1.5">
-            <span className="flex items-center gap-1">
-              <TrendingUp className="w-3 h-3 text-emerald-500" />
-              <span>Ahorro Acumulado Total</span>
-            </span>
-            <span className="font-mono font-bold text-slate-900 dark:text-white">
-              {formatCurrency(totalSaved)} <span className="text-slate-400 font-normal">/ {formatCurrency(totalTarget)}</span>
-            </span>
-          </div>
-          <div className="w-full h-2 rounded-full bg-slate-100 dark:bg-slate-950 overflow-hidden p-0.5 border border-slate-200 dark:border-slate-800">
-            <div
-              className="h-full rounded-full bg-gradient-to-r from-emerald-500 via-teal-400 to-cyan-400 transition-all duration-700"
-              style={{ width: `${Math.min(100, Math.max(0, totalProgress))}%` }}
-            />
-          </div>
-        </div>
       </div>
 
       {/* Horizon Tabs (Corto plazo, Mediano plazo, etc.) */}
@@ -249,18 +407,22 @@ export function GoalsView({ goals = [], onAddGoal, onUpdateSaved, onDeleteGoal }
           <button
             key={term}
             onClick={() => setSelectedTerm(term)}
-            className={`px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all border active:scale-95 ${
-              selectedTerm === term
-                ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-950 border-slate-900 dark:border-white shadow-xs'
-                : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800'
-            }`}
+            className={`px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all border active:scale-95 ${selectedTerm === term
+              ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-950 border-slate-900 dark:border-white shadow-xs'
+              : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800'
+              }`}
           >
             {term}
           </button>
         ))}
-        <span className="ml-auto text-[10px] text-slate-400 font-mono font-semibold">
-          {filteredGoals.length} {filteredGoals.length === 1 ? 'meta' : 'metas'}
-        </span>
+        <div className="ml-auto flex items-center gap-2 shrink-0">
+          <span className="text-[10px] text-slate-400 dark:text-slate-500 font-normal hidden xs:inline">
+            · Arrastra para ordenar
+          </span>
+          <span className="text-[10px] text-slate-400 font-mono font-semibold">
+            {filteredGoals.length} {filteredGoals.length === 1 ? 'meta' : 'metas'}
+          </span>
+        </div>
       </div>
 
       {/* ========================================================= */}
@@ -304,11 +466,10 @@ export function GoalsView({ goals = [], onAddGoal, onUpdateSaved, onDeleteGoal }
                       key={template.id}
                       type="button"
                       onClick={() => handleSelectTemplate(template)}
-                      className={`relative rounded-2xl overflow-hidden text-left border p-2.5 transition-all flex flex-col justify-end h-24 sm:h-28 group ${
-                        isSelected
-                          ? 'border-emerald-500 ring-2 ring-emerald-500/40 shadow-md'
-                          : 'border-slate-200 dark:border-slate-800 opacity-75 hover:opacity-100'
-                      }`}
+                      className={`relative rounded-2xl overflow-hidden text-left border p-2.5 transition-all flex flex-col justify-end h-24 sm:h-28 group ${isSelected
+                        ? 'border-emerald-500 ring-2 ring-emerald-500/40 shadow-md'
+                        : 'border-slate-200 dark:border-slate-800 opacity-75 hover:opacity-100'
+                        }`}
                     >
                       {/* Background image preview */}
                       <img
@@ -434,48 +595,82 @@ export function GoalsView({ goals = [], onAddGoal, onUpdateSaved, onDeleteGoal }
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-            {filteredGoals.map((goal) => {
+          <div
+            className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 select-none"
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
+            onTouchCancel={handleTouchEnd}
+          >
+            {displayGoals.map((goal, index) => {
               const progress = goal.targetAmount > 0 ? (goal.currentAmount / goal.targetAmount) * 100 : 0;
               const isCompleted = goal.currentAmount >= goal.targetAmount;
               const bgImage = getGoalImage(goal);
-              const IconComp = ICONS_MAP[goal.icon] || Target;
+              const isBeingDragged = dragIndex !== null && filteredGoals[dragIndex]?.id === goal.id;
+              const isDropTarget = dropIndex === index && dragIndex !== null && dragIndex !== index;
 
               return (
                 <div
                   key={goal.id}
-                  className="relative rounded-3xl overflow-hidden border border-slate-200 dark:border-slate-800 shadow-md group transition-all duration-200 flex flex-col justify-between min-h-[190px] sm:min-h-[210px]"
+                  data-goal-index={index}
+                  draggable
+                  onDragStart={(e) => handleDragStart(index, e)}
+                  onDragEnter={(e) => handleDragEnter(index, e)}
+                  onDragOver={handleDragOver}
+                  onDragEnd={handleDragEnd}
+                  onDrop={handleDrop}
+                  onTouchStart={(e) => handleTouchStart(index, e)}
+                  style={{ touchAction: isTouchDragging ? 'none' : 'pan-y' }}
+                  className={`relative rounded-3xl overflow-hidden border border-slate-200 dark:border-slate-800 shadow-md group transition-all duration-200 flex flex-col justify-between min-h-[190px] sm:min-h-[210px] cursor-grab active:cursor-grabbing ${
+                    isBeingDragged
+                      ? 'opacity-40 scale-95 z-10'
+                      : isDropTarget
+                      ? 'scale-[1.03] ring-2 ring-emerald-500 shadow-xl z-20'
+                      : 'hover:scale-[1.01]'
+                  }`}
                 >
                   {/* Background Image with Dark Vignette Gradient */}
                   <img
                     src={bgImage}
                     alt={goal.title}
-                    className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 pointer-events-none select-none"
                     loading="lazy"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/70 to-slate-950/30" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/70 to-slate-950/30 pointer-events-none" />
 
-                  {/* Card Content Top: Badge and Delete */}
+                  {/* Card Content Top: Grip Handle, Badge and Delete */}
                   <div className="relative z-10 p-4 flex items-start justify-between">
-                    <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider backdrop-blur-md border shadow-xs ${
-                      isCompleted
+                    <div className="flex items-center gap-1.5">
+                      <div
+                        data-drag-handle="true"
+                        title="Arrastrar para mover posición"
+                        className="p-1 rounded-lg bg-black/40 hover:bg-black/60 text-white/70 hover:text-white transition-colors cursor-grab active:cursor-grabbing backdrop-blur-md"
+                      >
+                        <GripVertical className="w-3.5 h-3.5" />
+                      </div>
+
+                      <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider backdrop-blur-md border shadow-xs ${isCompleted
                         ? 'bg-emerald-500/90 text-white border-emerald-400'
                         : 'bg-slate-900/80 text-emerald-400 border-emerald-500/30'
-                    }`}>
-                      {isCompleted ? (
-                        <>
-                          <CheckCircle2 className="w-3 h-3" />
-                          <span>Completado</span>
-                        </>
-                      ) : (
-                        <span>{progress.toFixed(0)}% Completado</span>
-                      )}
-                    </span>
+                        }`}>
+                        {isCompleted ? (
+                          <>
+                            <CheckCircle2 className="w-3 h-3" />
+                            <span>Completado</span>
+                          </>
+                        ) : (
+                          <span>{progress.toFixed(0)}% Completado</span>
+                        )}
+                      </span>
+                    </div>
 
                     <button
-                      onClick={() => onDeleteGoal(goal.id)}
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onDeleteGoal(goal.id);
+                      }}
                       title="Eliminar meta"
-                      className="p-1.5 rounded-full bg-slate-900/60 hover:bg-rose-950 text-slate-300 hover:text-rose-400 border border-white/10 transition-colors backdrop-blur-md"
+                      className="p-1.5 rounded-full bg-slate-900/60 hover:bg-rose-950 text-slate-300 hover:text-rose-400 border border-white/10 transition-colors backdrop-blur-md shrink-0"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
@@ -500,11 +695,10 @@ export function GoalsView({ goals = [], onAddGoal, onUpdateSaved, onDeleteGoal }
                     {/* Progress Bar */}
                     <div className="w-full h-2 rounded-full bg-black/50 backdrop-blur-md overflow-hidden p-0.5 border border-white/20">
                       <div
-                        className={`h-full rounded-full transition-all duration-700 ease-out ${
-                          isCompleted
-                            ? 'bg-emerald-400'
-                            : 'bg-gradient-to-r from-emerald-400 via-teal-400 to-cyan-300'
-                        }`}
+                        className={`h-full rounded-full transition-all duration-700 ease-out ${isCompleted
+                          ? 'bg-emerald-400'
+                          : 'bg-gradient-to-r from-emerald-400 via-teal-400 to-cyan-300'
+                          }`}
                         style={{ width: `${Math.min(100, Math.max(0, progress))}%` }}
                       />
                     </div>
@@ -526,7 +720,11 @@ export function GoalsView({ goals = [], onAddGoal, onUpdateSaved, onDeleteGoal }
                         </span>
                       ) : (
                         <button
-                          onClick={() => setDepositGoalId(goal.id)}
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setDepositGoalId(goal.id);
+                          }}
                           className="px-3 py-1.5 rounded-xl bg-white/95 hover:bg-white text-slate-900 font-bold text-xs shadow-md active:scale-95 transition-all"
                         >
                           + Aportar

@@ -1,7 +1,8 @@
 import { useState, useEffect, useMemo } from 'react';
-import { CATEGORIES, INITIAL_BUDGETS, INITIAL_TRANSACTIONS } from '../constants/categories';
+import { CATEGORIES, INITIAL_BUDGETS, INITIAL_TRANSACTIONS, getColorTheme } from '../constants/categories';
 
 const STORAGE_KEYS = {
+  CATEGORIES: 'emp_wallet_categories_v1',
   BUDGETS: 'emp_wallet_budgets_v1',
   TRANSACTIONS: 'emp_wallet_transactions_v1',
   GOALS: 'emp_wallet_goals_v1',
@@ -55,6 +56,19 @@ const INITIAL_GOALS = [
 ];
 
 export function useWallet() {
+  const [categories, setCategories] = useState(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEYS.CATEGORIES);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch (e) {
+      console.error('Error loading categories from localStorage', e);
+    }
+    return CATEGORIES;
+  });
+
   const [budgets, setBudgets] = useState(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEYS.BUDGETS);
@@ -87,6 +101,15 @@ export function useWallet() {
     }
     return INITIAL_GOALS;
   });
+
+  // Persist categories
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEYS.CATEGORIES, JSON.stringify(categories));
+    } catch (e) {
+      console.error('Error saving categories to localStorage', e);
+    }
+  }, [categories]);
 
   // Persist budgets
   useEffect(() => {
@@ -156,11 +179,18 @@ export function useWallet() {
     setGoals((prev) => prev.filter((g) => g.id !== goalId));
   };
 
+  // Reorder goals (drag and drop)
+  const reorderGoals = (newGoals) => {
+    if (Array.isArray(newGoals) && newGoals.length > 0) {
+      setGoals(newGoals);
+    }
+  };
+
   // Compute pocket statistics
   const pocketStats = useMemo(() => {
     const stats = {};
 
-    CATEGORIES.forEach((cat) => {
+    categories.forEach((cat) => {
       const budget = Number(budgets[cat.id]) || 0;
       const spent = transactions
         .filter((t) => t.categoryId === cat.id)
@@ -189,7 +219,7 @@ export function useWallet() {
     });
 
     return stats;
-  }, [budgets, transactions]);
+  }, [categories, budgets, transactions]);
 
   // Global calculations
   const summary = useMemo(() => {
@@ -266,11 +296,48 @@ export function useWallet() {
     }
   };
 
+  // Create a new pocket
+  const createPocket = ({ name, iconName = 'Wallet', color = 'indigo', budget = 0, hint = '' }) => {
+    const numBudget = parseFloat(budget);
+    if (isNaN(numBudget) || numBudget <= 0) {
+      throw new Error('El presupuesto del bolsillo debe ser mayor a 0');
+    }
+    const cleanName = (name || '').trim();
+    if (!cleanName) {
+      throw new Error('Debes indicar un nombre para el bolsillo');
+    }
+
+    const id = `pocket-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
+    const theme = getColorTheme(color);
+
+    const newCategory = {
+      id,
+      name: cleanName,
+      iconName,
+      color,
+      theme,
+      defaultBudget: numBudget,
+      hint: hint || `Gastos de ${cleanName}`,
+    };
+
+    setCategories((prev) => [...prev, newCategory]);
+    setBudgets((prev) => ({
+      ...prev,
+      [id]: numBudget,
+    }));
+
+    return newCategory;
+  };
+
   // Reset to seed data
   const resetToSeedData = () => {
+    setCategories(CATEGORIES);
     setBudgets(INITIAL_BUDGETS);
     setTransactions(INITIAL_TRANSACTIONS);
     setGoals(INITIAL_GOALS);
+    try {
+      localStorage.removeItem(STORAGE_KEYS.CATEGORIES);
+    } catch {}
   };
 
   // Clear all transactions for clean month
@@ -278,7 +345,15 @@ export function useWallet() {
     setTransactions([]);
   };
 
+  // Reorder pockets (drag and drop)
+  const reorderCategories = (newOrder) => {
+    if (Array.isArray(newOrder) && newOrder.length > 0) {
+      setCategories(newOrder);
+    }
+  };
+
   return {
+    categories,
     budgets,
     transactions,
     pocketStats,
@@ -286,11 +361,14 @@ export function useWallet() {
     addExpense,
     deleteExpense,
     updateBudgets,
+    createPocket,
+    reorderCategories,
     resetToSeedData,
     clearMonthTransactions,
     goals,
     addGoal,
     depositToGoal,
     deleteGoal,
+    reorderGoals,
   };
 }

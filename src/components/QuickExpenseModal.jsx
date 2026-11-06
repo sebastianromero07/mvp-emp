@@ -10,7 +10,7 @@ export function QuickExpenseModal({ isOpen, onClose, categoryId, onAddExpense, p
 
   if (!isOpen) return null;
 
-  const category = CATEGORIES.find((c) => c.id === categoryId) || CATEGORIES[0];
+  const category = (pocketStats && pocketStats[categoryId]?.category) || CATEGORIES.find((c) => c.id === categoryId) || CATEGORIES[0];
   const stats = pocketStats ? pocketStats[category.id] : null;
 
   const handleSubmit = (e) => {
@@ -49,7 +49,7 @@ export function QuickExpenseModal({ isOpen, onClose, categoryId, onAddExpense, p
               </h3>
               {stats && (
                 <span className="text-[10px] text-slate-500 dark:text-slate-400">
-                  Disponible: <strong className="text-emerald-600 dark:text-emerald-400 font-mono">{formatCurrency(stats.available)}</strong>
+                  Disponible: <strong className="text-slate-800 dark:text-white font-mono">{formatCurrency(stats.available)}</strong>
                 </span>
               )}
             </div>

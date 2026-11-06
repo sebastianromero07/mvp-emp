@@ -21,9 +21,19 @@ const CATEGORY_COLORS = {
   transporte: '#0284c7',   // Sky
   entretenimiento: '#a855f7', // Purple
   emergencias: '#10b981',  // Emerald
+  orange: '#f97316',
+  blue: '#0284c7',
+  purple: '#a855f7',
+  green: '#10b981',
+  indigo: '#6366f1',
+  rose: '#f43f5e',
+  amber: '#f59e0b',
+  pink: '#ec4899',
+  cyan: '#06b6d4',
+  teal: '#14b8a6',
 };
 
-export function ReportView({ summary, pocketStats, transactions = [] }) {
+export function ReportView({ summary, pocketStats, transactions = [], categories = CATEGORIES }) {
   const [selectedCategoryId, setSelectedCategoryId] = useState(null);
 
   const {
@@ -39,7 +49,7 @@ export function ReportView({ summary, pocketStats, transactions = [] }) {
 
   // Enriched categories with stats
   const categoriesWithStats = useMemo(() => {
-    return CATEGORIES.map((cat) => {
+    return categories.map((cat) => {
       const stats = pocketStats[cat.id] || { spent: 0, budget: 0, available: 0, spentPercent: 0 };
       const percentOfTotal = totalSpent > 0 ? (stats.spent / totalSpent) * 100 : 0;
       const percentOfBudget = stats.budget > 0 ? (stats.spent / stats.budget) * 100 : 0;
@@ -164,7 +174,7 @@ export function ReportView({ summary, pocketStats, transactions = [] }) {
             <span className="text-[10px] uppercase font-semibold text-slate-500 dark:text-slate-400 block mb-0.5">
               Gastado
             </span>
-            <span className="text-sm sm:text-base font-extrabold font-mono text-rose-600 dark:text-rose-400">
+            <span className="text-sm sm:text-base font-extrabold font-mono text-slate-900 dark:text-white">
               {formatCurrency(totalSpent)}
             </span>
           </div>
@@ -174,7 +184,7 @@ export function ReportView({ summary, pocketStats, transactions = [] }) {
               Disponible
             </span>
             <span className={`text-sm sm:text-base font-extrabold font-mono ${
-              totalAvailable < 0 ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400'
+              totalAvailable < 0 ? 'text-rose-600 dark:text-rose-400' : 'text-slate-900 dark:text-white'
             }`}>
               {formatCurrency(totalAvailable)}
             </span>
@@ -184,7 +194,7 @@ export function ReportView({ summary, pocketStats, transactions = [] }) {
             <span className="text-[10px] uppercase font-semibold text-slate-500 dark:text-slate-400 block mb-0.5">
               Ppto Total
             </span>
-            <span className="text-sm sm:text-base font-extrabold font-mono text-emerald-600 dark:text-emerald-400">
+            <span className="text-sm sm:text-base font-extrabold font-mono text-slate-700 dark:text-slate-300">
               {formatCurrency(totalBudget)}
             </span>
           </div>
@@ -410,13 +420,13 @@ export function ReportView({ summary, pocketStats, transactions = [] }) {
                       {cat.name}
                     </h4>
                     <span className="text-[10px] text-slate-400">
-                      Ppto: <span className="text-emerald-600 dark:text-emerald-400 font-medium">{formatCurrency(cat.budget)}</span>
+                      Ppto: {formatCurrency(cat.budget)}
                     </span>
                   </div>
                 </div>
 
                 <div className="text-right">
-                  <span className="text-xs font-mono font-extrabold text-rose-600 dark:text-rose-400 block">
+                  <span className="text-xs font-mono font-extrabold text-slate-900 dark:text-white block">
                     {formatCurrency(cat.spent)}
                   </span>
                   <span className={`text-[10px] font-bold font-mono ${
@@ -424,7 +434,7 @@ export function ReportView({ summary, pocketStats, transactions = [] }) {
                       ? 'text-rose-600 dark:text-rose-400'
                       : cat.isLowFunds
                       ? 'text-amber-600 dark:text-amber-400'
-                      : 'text-emerald-600 dark:text-emerald-400'
+                      : 'text-slate-600 dark:text-slate-300'
                   }`}>
                     {cat.isOutOfFunds ? 'Sin fondos' : `${cat.percentOfBudget.toFixed(0)}% usado`}
                   </span>
@@ -447,7 +457,7 @@ export function ReportView({ summary, pocketStats, transactions = [] }) {
 
               {/* Footer info row */}
               <div className="flex items-center justify-between text-[10px] text-slate-500 dark:text-slate-400 pt-0.5">
-                <span>Disponible: <strong className={cat.isOutOfFunds ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400'}>{formatCurrency(cat.available)}</strong></span>
+                <span>Disponible: <strong className={cat.isOutOfFunds ? 'text-rose-600 dark:text-rose-400' : 'text-slate-800 dark:text-slate-200'}>{formatCurrency(cat.available)}</strong></span>
                 <span>{cat.percentOfTotal.toFixed(0)}% del gasto global</span>
               </div>
             </div>
