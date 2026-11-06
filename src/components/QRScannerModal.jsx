@@ -416,55 +416,62 @@ export function QRScannerModal({
         {/* VIEW 2: CONFIRM PAYMENT SCREEN (Enter / confirm amount) */}
         {/* ======================================================== */}
         {viewState === 'CONFIRM' && (
-          <form onSubmit={handleConfirmPayment} className="flex-1 flex flex-col justify-between p-5 pt-7 sm:p-6">
-            <div>
-              {/* Header */}
-              <div className="flex items-center justify-between pb-3 border-b border-slate-800">
-                <button
-                  type="button"
-                  onClick={() => setViewState('SCANNER')}
-                  className="p-2 rounded-xl bg-white/10 hover:bg-white/20 active:scale-95 text-white transition-all flex items-center gap-1.5 text-xs font-semibold"
-                >
-                  <ArrowLeft className="w-4 h-4" />
-                  <span>Volver al escáner</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={onClose}
-                  className="p-2 rounded-xl bg-white/10 hover:bg-white/20 text-white transition-all"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
+          <form
+            onSubmit={handleConfirmPayment}
+            className="flex-1 flex flex-col justify-between p-5 sm:p-6 min-h-full overflow-y-auto"
+          >
+            {/* Top Header */}
+            <div className="flex items-center justify-between pb-3 border-b border-slate-800/80 shrink-0">
+              <button
+                type="button"
+                onClick={() => setViewState('SCANNER')}
+                className="p-2.5 rounded-2xl bg-white/10 hover:bg-white/20 active:scale-95 text-white transition-all flex items-center gap-2 text-xs font-bold cursor-pointer"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                <span>Volver al escáner</span>
+              </button>
+              <button
+                type="button"
+                onClick={onClose}
+                className="p-2.5 rounded-2xl bg-white/10 hover:bg-white/20 text-white transition-all active:scale-95 cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
 
+            {/* Center Content: Centrado y balanceado verticalmente en la pantalla */}
+            <div className="my-auto py-4 sm:py-6 space-y-4 sm:space-y-5 flex flex-col justify-center">
               {/* Merchant Card */}
-              <div className="mt-5 p-4 rounded-3xl bg-slate-950/80 border border-slate-800 flex items-center gap-3.5">
-                <div className="w-12 h-12 rounded-2xl bg-indigo-600/20 text-indigo-400 border border-indigo-500/30 flex items-center justify-center shrink-0">
+              <div className="p-4 rounded-3xl bg-slate-950/90 border border-slate-800/90 flex items-center gap-3.5 shadow-lg">
+                <div className="w-12 h-12 sm:w-13 sm:h-13 rounded-2xl bg-indigo-600/20 text-indigo-400 border border-indigo-500/30 flex items-center justify-center shrink-0">
                   <Store className="w-6 h-6" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider block">
+                  <span className="text-[10px] sm:text-xs uppercase font-extrabold text-slate-400 tracking-wider block">
                     Pagar a comercio
                   </span>
                   <input
                     type="text"
                     value={merchantName}
                     onChange={(e) => setMerchantName(e.target.value)}
-                    className="font-extrabold text-base text-white bg-transparent border-b border-transparent focus:border-indigo-500 focus:outline-none w-full truncate"
+                    className="font-black text-base sm:text-lg text-white bg-transparent border-b border-transparent focus:border-indigo-500 focus:outline-none w-full truncate"
                   />
-                  <span className="text-[11px] text-emerald-400 font-medium flex items-center gap-1 mt-0.5">
+                  <span className="text-[11px] text-emerald-400 font-semibold flex items-center gap-1 mt-0.5">
                     <ShieldCheck className="w-3.5 h-3.5" /> Código QR verificado
                   </span>
                 </div>
               </div>
 
               {/* Amount Input */}
-              <div className="mt-6 text-center">
-                <label htmlFor="qr-amount" className="text-xs font-bold uppercase tracking-wider text-slate-400 block mb-2">
+              <div className="text-center space-y-2.5">
+                <label
+                  htmlFor="qr-amount"
+                  className="text-xs sm:text-sm font-extrabold uppercase tracking-widest text-slate-400 block"
+                >
                   ¿Cuánto deseas pagar?
                 </label>
                 <div className="relative max-w-xs mx-auto">
-                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-3xl font-black font-mono text-slate-400">
+                  <span className="absolute left-5 top-1/2 -translate-y-1/2 text-3xl sm:text-4xl font-black font-mono text-slate-400">
                     $
                   </span>
                   <input
@@ -477,18 +484,18 @@ export function QRScannerModal({
                     value={amount}
                     onChange={(e) => setAmount(e.target.value)}
                     placeholder="0.00"
-                    className="w-full pl-12 pr-4 py-3 bg-slate-950 border-2 border-indigo-500 rounded-3xl text-3xl sm:text-4xl font-black font-mono text-white text-center focus:outline-none focus:ring-4 focus:ring-indigo-500/20 shadow-xl"
+                    className="w-full pl-13 pr-5 py-3.5 bg-slate-950 border-2 border-indigo-500 rounded-3xl text-3xl sm:text-4xl font-black font-mono text-white text-center focus:outline-none focus:ring-4 focus:ring-indigo-500/30 shadow-2xl"
                   />
                 </div>
 
                 {/* Quick Add Chips */}
-                <div className="flex justify-center gap-2 mt-3">
+                <div className="flex justify-center gap-2 pt-1">
                   {[5, 10, 20, 50].map((v) => (
                     <button
                       key={v}
                       type="button"
                       onClick={() => handleQuickAdd(v)}
-                      className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold font-mono text-slate-200 active:scale-95 transition-all"
+                      className="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs sm:text-sm font-extrabold font-mono text-slate-200 active:scale-95 transition-all shadow-sm cursor-pointer"
                     >
                       +${v}
                     </button>
@@ -497,30 +504,30 @@ export function QRScannerModal({
               </div>
 
               {/* Concept Input */}
-              <div className="mt-5">
+              <div>
                 <input
                   type="text"
                   value={concept}
                   onChange={(e) => setConcept(e.target.value)}
                   placeholder="Mensaje o concepto (opcional)"
-                  className="w-full px-4 py-2.5 rounded-2xl bg-slate-950 border border-slate-800 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500"
+                  className="w-full px-4 py-3 rounded-2xl bg-slate-950 border border-slate-800 text-xs sm:text-sm text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500"
                 />
               </div>
 
               {/* Source Pocket Summary */}
-              <div className="mt-4 p-3 rounded-2xl bg-indigo-950/30 border border-indigo-500/30 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <div className={`w-7 h-7 rounded-lg flex items-center justify-center ${category?.theme?.bgLight} ${category?.theme?.text}`}>
-                    <CategoryIcon iconName={category?.iconName} className="w-4 h-4" />
+              <div className="p-3.5 rounded-2xl bg-indigo-950/30 border border-indigo-500/30 flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
+                  <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${category?.theme?.bgLight} ${category?.theme?.text}`}>
+                    <CategoryIcon iconName={category?.iconName} className="w-4 h-4 sm:w-5 sm:h-5" />
                   </div>
                   <div>
-                    <span className="text-[10px] text-slate-400 block leading-tight">Debitar de</span>
-                    <span className="text-xs font-bold text-white leading-tight">{category?.name}</span>
+                    <span className="text-[10px] sm:text-xs text-slate-400 block leading-tight font-medium">Debitar de</span>
+                    <span className="text-xs sm:text-sm font-extrabold text-white leading-tight">{category?.name}</span>
                   </div>
                 </div>
                 <div className="text-right">
-                  <span className="text-[10px] text-slate-400 block leading-tight">Disponible</span>
-                  <span className="text-xs font-mono font-bold text-emerald-400 leading-tight">
+                  <span className="text-[10px] sm:text-xs text-slate-400 block leading-tight font-medium">Disponible</span>
+                  <span className="text-xs sm:text-sm font-mono font-bold text-emerald-400 leading-tight">
                     {formatCurrency(availableBalance)}
                   </span>
                 </div>
@@ -528,11 +535,11 @@ export function QRScannerModal({
             </div>
 
             {/* Submit Button */}
-            <div className="pt-4 mt-auto">
+            <div className="pt-2 pb-1 shrink-0">
               <button
                 type="submit"
                 disabled={!amount || parseFloat(amount) <= 0}
-                className="w-full py-4 px-6 rounded-2xl bg-indigo-600 hover:bg-indigo-500 disabled:bg-slate-800 disabled:text-slate-600 text-white font-extrabold text-base tracking-wide shadow-xl shadow-indigo-600/30 active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer disabled:cursor-not-allowed"
+                className="w-full py-4 px-6 rounded-2xl bg-indigo-600 hover:bg-indigo-500 disabled:bg-slate-800 disabled:text-slate-600 text-white font-extrabold text-sm sm:text-base tracking-wide shadow-xl shadow-indigo-600/35 active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer disabled:cursor-not-allowed"
               >
                 <span>Confirmar Pago de ${parseFloat(amount || 0).toFixed(2)}</span>
               </button>
