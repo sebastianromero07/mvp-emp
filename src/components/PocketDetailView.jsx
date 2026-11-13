@@ -249,7 +249,7 @@ export function PocketDetailView({
                             : 'text-slate-500 dark:text-slate-400 group-hover:text-slate-900 dark:group-hover:text-white'
                           : 'opacity-0'
                       }`}>
-                        ${item.total.toFixed(0)}
+                        S/{item.total.toFixed(0)}
                       </span>
 
                       {/* Bar Pillar */}

@@ -89,7 +89,7 @@ export function BudgetModal({ isOpen, onClose, currentBudgets, onSaveBudgets, on
                   </div>
 
                   <div className="flex items-center gap-1.5 shrink-0">
-                    <span className="text-sm font-bold text-slate-400 dark:text-slate-500 font-mono">$</span>
+                    <span className="text-sm font-bold text-slate-400 dark:text-slate-500 font-mono">S/</span>
                     <input
                       type="number"
                       min="0"

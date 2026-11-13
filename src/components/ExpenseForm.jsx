@@ -63,8 +63,8 @@ export function ExpenseForm({ onAddExpense, selectedCategory, onSelectCategory }
             Monto a gastar
           </label>
           <div className="relative rounded-2xl bg-slate-950/80 border border-slate-700/80 focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-500/30 transition-all">
-            <div className="absolute left-4 top-1/2 -translate-y-1/2 text-2xl font-bold font-mono text-slate-400">
-              $
+            <div className="absolute left-4 top-1/2 -translate-y-1/2 text-xl font-bold font-mono text-slate-400">
+              S/
             </div>
             <input
               id="expense-amount"
@@ -76,7 +76,7 @@ export function ExpenseForm({ onAddExpense, selectedCategory, onSelectCategory }
               onChange={(e) => setAmount(e.target.value)}
               placeholder="0.00"
               required
-              className="w-full bg-transparent pl-10 pr-4 py-3.5 text-2xl sm:text-3xl font-extrabold font-mono text-white placeholder-slate-600 focus:outline-none"
+              className="w-full bg-transparent pl-12 pr-4 py-3.5 text-2xl sm:text-3xl font-extrabold font-mono text-white placeholder-slate-600 focus:outline-none"
             />
           </div>
 
@@ -90,7 +90,7 @@ export function ExpenseForm({ onAddExpense, selectedCategory, onSelectCategory }
                 onClick={() => handleQuickAdd(val)}
                 className="px-2.5 py-1 rounded-lg bg-slate-800/80 hover:bg-slate-700 text-slate-300 text-xs font-semibold font-mono active:scale-95 transition-all border border-slate-700/60 shrink-0"
               >
-                +${val}
+                +S/{val}
               </button>
             ))}
             {amount && (

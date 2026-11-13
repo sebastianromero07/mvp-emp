@@ -67,11 +67,11 @@ export function QuickExpenseModal({ isOpen, onClose, categoryId, onAddExpense, p
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-[10px] uppercase font-bold text-slate-600 dark:text-slate-400 mb-1">
-              Monto a deducir ($)
+              Monto a deducir (S/)
             </label>
             <div className="relative rounded-2xl bg-slate-100 dark:bg-slate-950/80 border border-slate-300 dark:border-slate-700/80 focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-500/20">
-              <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-2xl font-bold font-mono text-slate-400 dark:text-slate-500">
-                $
+              <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-xl font-bold font-mono text-slate-400 dark:text-slate-500">
+                S/
               </span>
               <input
                 type="number"
@@ -82,7 +82,7 @@ export function QuickExpenseModal({ isOpen, onClose, categoryId, onAddExpense, p
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
                 placeholder="0.00"
-                className="w-full bg-transparent pl-9 pr-3 py-3 text-2xl font-mono font-extrabold text-slate-900 dark:text-white focus:outline-none"
+                className="w-full bg-transparent pl-11 pr-3 py-3 text-2xl font-mono font-extrabold text-slate-900 dark:text-white focus:outline-none"
               />
             </div>
 
@@ -95,7 +95,7 @@ export function QuickExpenseModal({ isOpen, onClose, categoryId, onAddExpense, p
                   onClick={() => handleQuickChip(v)}
                   className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800/80 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold font-mono active:scale-95 border border-slate-200 dark:border-slate-700"
                 >
-                  +${v}
+                  +S/{v}
                 </button>
               ))}
             </div>

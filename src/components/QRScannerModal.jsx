@@ -471,8 +471,8 @@ export function QRScannerModal({
                   ¿Cuánto deseas pagar?
                 </label>
                 <div className="relative max-w-xs mx-auto">
-                  <span className="absolute left-5 top-1/2 -translate-y-1/2 text-3xl sm:text-4xl font-black font-mono text-slate-400">
-                    $
+                  <span className="absolute left-5 top-1/2 -translate-y-1/2 text-2xl sm:text-3xl font-black font-mono text-slate-400">
+                    S/
                   </span>
                   <input
                     id="qr-amount"
@@ -484,7 +484,7 @@ export function QRScannerModal({
                     value={amount}
                     onChange={(e) => setAmount(e.target.value)}
                     placeholder="0.00"
-                    className="w-full pl-13 pr-5 py-3.5 bg-slate-950 border-2 border-indigo-500 rounded-3xl text-3xl sm:text-4xl font-black font-mono text-white text-center focus:outline-none focus:ring-4 focus:ring-indigo-500/30 shadow-2xl"
+                    className="w-full pl-15 pr-5 py-3.5 bg-slate-950 border-2 border-indigo-500 rounded-3xl text-3xl sm:text-4xl font-black font-mono text-white text-center focus:outline-none focus:ring-4 focus:ring-indigo-500/30 shadow-2xl"
                   />
                 </div>
 
@@ -497,7 +497,7 @@ export function QRScannerModal({
                       onClick={() => handleQuickAdd(v)}
                       className="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs sm:text-sm font-extrabold font-mono text-slate-200 active:scale-95 transition-all shadow-sm cursor-pointer"
                     >
-                      +${v}
+                      +S/{v}
                     </button>
                   ))}
                 </div>
@@ -541,7 +541,7 @@ export function QRScannerModal({
                 disabled={!amount || parseFloat(amount) <= 0}
                 className="w-full py-4 px-6 rounded-2xl bg-indigo-600 hover:bg-indigo-500 disabled:bg-slate-800 disabled:text-slate-600 text-white font-extrabold text-sm sm:text-base tracking-wide shadow-xl shadow-indigo-600/35 active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer disabled:cursor-not-allowed"
               >
-                <span>Confirmar Pago de ${parseFloat(amount || 0).toFixed(2)}</span>
+                <span>Confirmar Pago de S/ {parseFloat(amount || 0).toFixed(2)}</span>
               </button>
             </div>
           </form>

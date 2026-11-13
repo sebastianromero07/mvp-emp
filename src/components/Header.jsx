@@ -1,8 +1,8 @@
 import React from 'react';
-import { Wallet, SlidersHorizontal, RotateCcw, Sun, Moon, HelpCircle, Sprout } from 'lucide-react';
+import { Wallet, SlidersHorizontal, Sun, Moon, HelpCircle } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 
-export function Header({ onOpenConfig, onOpenResetModal, onOpenGuide, walletMode = 'demo' }) {
+export function Header({ onOpenConfig, onOpenGuide, walletMode = 'demo' }) {
   const { theme, toggleTheme } = useTheme();
 
   return (
@@ -16,7 +16,7 @@ export function Header({ onOpenConfig, onOpenResetModal, onOpenGuide, walletMode
           </div>
           <div className="flex items-center gap-1.5 sm:gap-2">
             <h1 className="font-extrabold text-base sm:text-lg tracking-tight text-slate-900 dark:text-white">
-              Bolsillos
+              Bolsillo
             </h1>
             {walletMode === 'seed' && (
               <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
@@ -26,7 +26,7 @@ export function Header({ onOpenConfig, onOpenResetModal, onOpenGuide, walletMode
           </div>
         </div>
 
-        <div className="flex items-center gap-1 sm:gap-1.5">
+        <div className="flex items-center gap-1.5 sm:gap-2">
           {/* Help / Guide Button */}
           <button
             onClick={onOpenGuide}
@@ -41,7 +41,7 @@ export function Header({ onOpenConfig, onOpenResetModal, onOpenGuide, walletMode
           <button
             onClick={toggleTheme}
             title={theme === 'dark' ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
-            className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 active:scale-95 transition-all text-xs flex items-center justify-center"
+            className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 active:scale-95 transition-all text-xs flex items-center justify-center cursor-pointer"
             aria-label="Alternar tema"
           >
             {theme === 'dark' ? (
@@ -51,22 +51,9 @@ export function Header({ onOpenConfig, onOpenResetModal, onOpenGuide, walletMode
             )}
           </button>
 
-          {/* Reset Mode Button: Chooses between Modo Semilla and Modo Demo */}
-          <button
-            onClick={onOpenResetModal}
-            title="Cambiar entre Modo Semilla (Desde Cero) o Modo Demo"
-            className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200 active:scale-95 transition-all text-xs flex items-center gap-1.5 font-medium cursor-pointer"
-            aria-label="Elegir Modo de Billetera"
-          >
-            <RotateCcw className="w-4 h-4" />
-            <span className="hidden xs:inline text-[11px] font-semibold">
-              {walletMode === 'seed' ? 'Semilla' : 'Demo'}
-            </span>
-          </button>
-
           <button
             onClick={onOpenConfig}
-            className="flex items-center gap-1.5 px-2.5 sm:px-3 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs shadow-md shadow-indigo-600/20 active:scale-95 transition-all"
+            className="flex items-center gap-1.5 px-2.5 sm:px-3 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs shadow-md shadow-indigo-600/20 active:scale-95 transition-all cursor-pointer"
             aria-label="Configurar Presupuestos"
           >
             <SlidersHorizontal className="w-3.5 h-3.5" />

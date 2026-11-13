@@ -2,12 +2,12 @@ import { useState, useEffect, useMemo } from 'react';
 import { CATEGORIES, INITIAL_BUDGETS, INITIAL_TRANSACTIONS, getColorTheme } from '../constants/categories';
 
 const STORAGE_KEYS = {
-  CATEGORIES: 'emp_wallet_categories_v1',
-  BUDGETS: 'emp_wallet_budgets_v1',
-  TRANSACTIONS: 'emp_wallet_transactions_v1',
-  GOALS: 'emp_wallet_goals_v1',
-  MODE: 'emp_wallet_mode_v1',
-  SEED_BALANCE: 'emp_wallet_seed_balance_v1',
+  CATEGORIES: 'emp_wallet_categories_v2',
+  BUDGETS: 'emp_wallet_budgets_v2',
+  TRANSACTIONS: 'emp_wallet_transactions_v2',
+  GOALS: 'emp_wallet_goals_v2',
+  MODE: 'emp_wallet_mode_v2',
+  SEED_BALANCE: 'emp_wallet_seed_balance_v2',
 };
 
 const INITIAL_GOALS = [
@@ -43,7 +43,7 @@ const INITIAL_GOALS = [
     currentAmount: 1000,
     icon: 'trip',
     term: 'Corto plazo',
-    strategy: null,
+    strategy: 'Renta fija',
     imageUrl: 'https://images.unsplash.com/photo-1436491865332-7a61a109cc05?auto=format&fit=crop&w=800&q=80',
     badge: '40% COMPLETADO',
   },
@@ -55,7 +55,7 @@ const INITIAL_GOALS = [
     currentAmount: 1500,
     icon: 'study',
     term: 'Mediano plazo',
-    strategy: null,
+    strategy: 'ETFs',
     imageUrl: 'https://images.unsplash.com/photo-1497633762265-9d179a990aa6?auto=format&fit=crop&w=800&q=80',
     badge: 'PLANIFICACIÓN',
   },
@@ -382,7 +382,7 @@ export function useWallet() {
       const currentAllocated = categories.reduce((sum, cat) => sum + (Number(budgets[cat.id]) || 0), 0);
       const remainingSeed = seedBalance - currentAllocated;
       if (numBudget > remainingSeed) {
-        throw new Error(`El presupuesto ($${numBudget.toFixed(2)}) supera tu Saldo Total disponible ($${remainingSeed.toFixed(2)})`);
+        throw new Error(`El presupuesto (S/ ${numBudget.toFixed(2)}) supera tu Saldo Total disponible (S/ ${remainingSeed.toFixed(2)})`);
       }
     }
 

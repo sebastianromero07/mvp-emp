@@ -148,7 +148,7 @@ export function CreatePocketModal({
                 htmlFor="pocket-budget"
                 className="text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider block"
               >
-                2. Valor del Presupuesto ($)
+                2. Valor del Presupuesto (S/)
               </label>
               <span className="text-[10px] text-slate-500 dark:text-slate-400">
                 Límite asignado
@@ -156,8 +156,8 @@ export function CreatePocketModal({
             </div>
 
             <div className="relative">
-              <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-base font-extrabold font-mono text-slate-400 dark:text-slate-500">
-                $
+              <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm font-extrabold font-mono text-slate-400 dark:text-slate-500">
+                S/
               </span>
               <input
                 id="pocket-budget"
@@ -167,7 +167,7 @@ export function CreatePocketModal({
                 value={budget}
                 onChange={(e) => setBudget(e.target.value)}
                 placeholder="0.00"
-                className="w-full pl-8 pr-4 py-2.5 bg-slate-50 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-xl text-base font-extrabold font-mono text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all"
+                className="w-full pl-9 pr-4 py-2.5 bg-slate-50 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-xl text-base font-extrabold font-mono text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all"
               />
             </div>
 
@@ -180,7 +180,7 @@ export function CreatePocketModal({
                   onClick={() => handleAddBudgetShortcut(val)}
                   className="flex-1 py-1 px-2 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 text-[10px] font-bold font-mono active:scale-95 transition-all"
                 >
-                  +${val}
+                  +S/{val}
                 </button>
               ))}
             </div>
@@ -212,7 +212,7 @@ export function CreatePocketModal({
           {/* Form helper note */}
           {!isFormValid && (
             <p className="text-[11px] text-amber-600 dark:text-amber-400/90 bg-amber-50 dark:bg-amber-500/10 p-2 rounded-xl border border-amber-200 dark:border-amber-500/20">
-              ⚠️ Ingresa un valor de presupuesto mayor a $0 para habilitar la creación del bolsillo.
+              ⚠️ Ingresa un valor de presupuesto mayor a S/ 0 para habilitar la creación del bolsillo.
             </p>
           )}
 

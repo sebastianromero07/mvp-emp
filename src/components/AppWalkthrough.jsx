@@ -23,100 +23,92 @@ export function AppWalkthrough({ isOpen, onClose, onNavigateToTab, hasPockets = 
         {
           id: 'balance',
           selector: '[data-tour="balance"]',
-          title: '1. Tu Saldo Total Disponible',
-          subtitle: 'Tu capital total para el mes',
-          content:
-            'Aquí tienes tu saldo disponible. Conforme creas bolsillos y les asignas presupuesto, se irá restando de este monto para ayudarte a organizar tu dinero sin sobrepasarte de tus ingresos.',
-          hint: '¿Cuál aplastar primero? Revisa tu saldo total antes de crear o pagar.',
+          title: '1. Saldo Total Disponible',
+          subtitle: 'Tu capital del mes',
+          content: 'Cada bolsillo que crees se restará de este saldo.',
+          hint: 'Revísalo antes de repartir tu dinero.',
           icon: Wallet,
           color: 'indigo',
-          actionText: 'Siguiente: Ver bolsillos'
+          actionText: 'Siguiente'
         },
         {
           id: 'pocket-card',
           selector: '[data-tour="pocket-card"]',
-          title: '2. Tus Bolsillos Estancos',
-          subtitle: 'Compartimentos que nunca se mezclan',
-          content:
-            'Cada recuadro es un espacio blindado. Si aplastas la tarjeta, entrarás a su espacio exclusivo para ver el gráfico diario de cómo vas gastando y su historial.',
-          hint: 'Toca la tarjeta para ver su gráfico de gastos por día.',
+          title: '2. Tus Bolsillos',
+          subtitle: 'Dinero separado por categoría',
+          content: 'Toca cualquier tarjeta para ver su historial y gráfico diario.',
+          hint: 'Cada bolsillo es independiente y no se mezcla.',
           icon: Target,
           color: 'purple',
-          actionText: 'Siguiente: Pagar con QR'
+          actionText: 'Siguiente'
         },
         {
           id: 'qr-button',
           selector: '[data-tour="qr-button"]',
-          title: '3. Paga al instante con Código QR',
-          subtitle: 'Estilo Yape directo desde este bolsillo',
-          content:
-            '¡Aplasta este botón de QR! Abrirá el escáner con la cámara de tu celular para pagar en cualquier comercio. El dinero se descuenta automáticamente de este bolsillo específico.',
-          hint: 'Pagas al instante y tu bolsillo se mantiene bajo control.',
+          title: '3. Pagar con QR',
+          subtitle: 'Pago directo desde tu bolsillo',
+          content: 'Escanea un QR y descuenta el gasto solo de este bolsillo.',
+          hint: 'Toca el ícono QR para pagar al instante.',
           icon: QrCode,
           color: 'cyan',
-          actionText: 'Siguiente: Crear bolsillos'
+          actionText: 'Siguiente'
         },
         {
           id: 'create-pocket',
           selector: '[data-tour="create-pocket"]',
-          title: '4. Crea Nuevos Bolsillos',
-          subtitle: 'Resta directamente de tu Saldo Total',
-          content:
-            '¿Quieres un nuevo bolsillo para Salidas, Cursos o Salud? Pulsa aquí. Al asignarle un presupuesto, se restará automáticamente de tu Saldo Total Disponible.',
-          hint: 'Reparte tu saldo total disponible en categorías estancas.',
+          title: '4. Crear Bolsillo',
+          subtitle: 'Nuevas categorías a tu medida',
+          content: 'Crea un bolsillo con su presupuesto y se restará de tu Saldo Total.',
+          hint: 'Pulsa aquí para añadir un bolsillo.',
           icon: Sparkles,
           color: 'indigo',
-          actionText: 'Siguiente: Objetivos y Rentabilidad'
+          actionText: 'Siguiente'
         },
         {
           id: 'nav-goals',
           selector: '[data-tour="nav-goals"]',
-          title: '5. Haz Crecer tu Dinero en Objetivos',
-          subtitle: 'Metas visuales y estrategias de inversión',
-          content:
-            '¡Aplasta aquí para ir a tus Metas! Define tus objetivos y elige cómo cumplirlos: Ahorro natural, Cuentas de alto rendimiento, Renta fija, Bonos, Acciones o ETFs.',
-          hint: 'Convierte tus ahorros en patrimonio con mayor rentabilidad.',
+          title: '5. Objetivos',
+          subtitle: 'Ahorra e invierte con metas claras',
+          content: 'Fija tus metas y elige cómo hacer crecer tu dinero.',
+          hint: 'Toca Objetivos para empezar.',
           icon: TrendingUp,
           color: 'emerald',
-          actionText: '¡Listo, empezar a usar!'
+          actionText: '¡Empezar!'
         }
       ]
     : [
         {
           id: 'balance',
           selector: '[data-tour="balance"]',
-          title: '1. Tu Saldo Total Disponible',
-          subtitle: 'Tu capital total para comenzar',
-          content:
-            'Aquí tienes tu saldo disponible inicial. Este es el pozo de dinero desde el cual crearás tus bolsillos. Cada bolsillo que crees restará de este saldo.',
-          hint: '¿Cuál aplastar primero? Aquí ves el capital total disponible.',
+          title: '1. Saldo Total Disponible',
+          subtitle: 'Tu capital inicial',
+          content: 'Cada bolsillo que crees se restará de este monto.',
+          hint: 'Este es tu pozo disponible para repartir.',
           icon: Wallet,
           color: 'indigo',
-          actionText: 'Siguiente: Crear tu primer bolsillo'
+          actionText: 'Siguiente'
         },
         {
           id: 'create-pocket',
           selector: '[data-tour="create-pocket"]',
           title: '2. Crea tu Primer Bolsillo',
-          subtitle: 'Asigna y reparte tu saldo disponible',
-          content:
-            '¡Aplasta este botón! Podrás crear bolsillos como Alimentación, Transporte o Salidas y asignarles un presupuesto. Ese monto se restará de tu Saldo Total.',
-          hint: 'El primer paso para que el dinero no se mezcle.',
+          subtitle: 'Organiza tu dinero por categoría',
+          content: 'Asigna un presupuesto y se descontará de tu Saldo Total.',
+          hint: 'Pulsa aquí para empezar.',
           icon: Sparkles,
           color: 'indigo',
-          actionText: 'Siguiente: Objetivos y Rentabilidad'
+          actionText: 'Siguiente'
         },
         {
           id: 'nav-goals',
           selector: '[data-tour="nav-goals"]',
-          title: '3. Objetivos y Rentabilidad',
-          subtitle: 'Pon a trabajar tu dinero',
-          content:
-            'En esta sección puedes fijar metas de ahorro y seleccionar instrumentos financieros (Cuentas de alto rendimiento, ETFs, etc.) para que la inflación no deprecie tus ahorros.',
-          hint: 'Haz crecer tu patrimonio con objetivos claros.',
+          title: '3. Objetivos',
+          subtitle: 'Haz crecer tus ahorros',
+          content: 'Crea metas y elige el instrumento financiero ideal para ti.',
+          hint: 'Toca Objetivos para ver tus opciones.',
           icon: TrendingUp,
           color: 'emerald',
-          actionText: '¡Listo, empezar a usar!'
+          actionText: '¡Empezar!'
         }
       ];
 
@@ -186,6 +178,10 @@ export function AppWalkthrough({ isOpen, onClose, onNavigateToTab, hasPockets = 
   };
 
   const IconComp = step.icon || Sparkles;
+  const isTargetInLowerHalf =
+    targetRect &&
+    typeof window !== 'undefined' &&
+    targetRect.top + targetRect.height / 2 > window.innerHeight * 0.5;
 
   return (
     <div className="fixed inset-0 z-50 overflow-hidden pointer-events-auto animate-fade-in select-none">
@@ -232,8 +228,12 @@ export function AppWalkthrough({ isOpen, onClose, onNavigateToTab, hasPockets = 
         />
       )}
 
-      {/* Tour Step Card - Positioned nicely at bottom or center */}
-      <div className="absolute inset-x-3 bottom-6 sm:bottom-10 sm:max-w-md sm:mx-auto z-20">
+      {/* Tour Step Card - Positioned away from the highlighted element */}
+      <div
+        className={`absolute inset-x-3 ${
+          isTargetInLowerHalf ? 'top-6 sm:top-10' : 'bottom-6 sm:bottom-10'
+        } sm:max-w-md sm:mx-auto z-20 transition-all duration-300`}
+      >
         <div className="rounded-3xl bg-slate-900 border border-slate-700/80 shadow-2xl p-5 text-white backdrop-blur-xl relative overflow-hidden">
           {/* Subtle neon glow */}
           <div className="absolute -top-10 -right-10 w-32 h-32 bg-indigo-500/20 rounded-full blur-2xl pointer-events-none" />

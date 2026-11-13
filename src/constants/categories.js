@@ -233,60 +233,102 @@ export function getColorTheme(color) {
 }
 
 export const INITIAL_BUDGETS = {
-  alimentacion: 400,
-  transporte: 150,
-  entretenimiento: 120,
-  emergencias: 350,
+  alimentacion: 600,
+  transporte: 250,
+  entretenimiento: 200,
+  emergencias: 500,
 };
 
 export const INITIAL_TRANSACTIONS = [
   {
     id: 'tx-seed-1',
     categoryId: 'alimentacion',
-    amount: 54.20,
-    description: 'Supermercado quincenal',
-    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 3).toISOString(), // Hoy
+    amount: 85.50,
+    description: 'Supermercado Plaza Vea',
+    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(), // Hoy
   },
   {
     id: 'tx-seed-2',
-    categoryId: 'alimentacion',
-    amount: 14.50,
-    description: 'Café y desayuno',
-    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(), // Ayer
+    categoryId: 'transporte',
+    amount: 18.00,
+    description: 'Viaje en Cabify al centro',
+    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 5).toISOString(), // Hoy
   },
   {
     id: 'tx-seed-3',
-    categoryId: 'transporte',
-    amount: 22.00,
-    description: 'Recarga tarjeta metro y autobús',
-    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 26).toISOString(), // Ayer
+    categoryId: 'alimentacion',
+    amount: 24.00,
+    description: 'Menú ejecutivo y bebida',
+    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 22).toISOString(), // Ayer
   },
   {
     id: 'tx-seed-4',
-    categoryId: 'alimentacion',
-    amount: 28.50,
-    description: 'Almuerzo de trabajo',
-    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 48).toISOString(), // Hace 2 días
+    categoryId: 'entretenimiento',
+    amount: 45.00,
+    description: 'Entradas Cineplanet + cancha',
+    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 26).toISOString(), // Ayer
   },
   {
     id: 'tx-seed-5',
-    categoryId: 'entretenimiento',
-    amount: 35.00,
-    description: 'Boletos de cine + palomitas',
-    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 72).toISOString(), // Hace 3 días
+    categoryId: 'transporte',
+    amount: 30.00,
+    description: 'Recarga tarjeta Metropolitano / Tren',
+    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 46).toISOString(), // Hace 2 días
   },
   {
     id: 'tx-seed-6',
-    categoryId: 'transporte',
-    amount: 15.00,
-    description: 'Taxi Uber',
-    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 96).toISOString(), // Hace 4 días
+    categoryId: 'alimentacion',
+    amount: 42.80,
+    description: 'Cena con amigos',
+    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 50).toISOString(), // Hace 2 días
   },
   {
     id: 'tx-seed-7',
+    categoryId: 'entretenimiento',
+    amount: 29.90,
+    description: 'Suscripción Spotify y Streaming',
+    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 70).toISOString(), // Hace 3 días
+  },
+  {
+    id: 'tx-seed-8',
     categoryId: 'alimentacion',
-    amount: 18.20,
-    description: 'Frutería y panadería',
-    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 120).toISOString(), // Hace 5 días
+    amount: 32.00,
+    description: 'Compras en mercado local',
+    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 74).toISOString(), // Hace 3 días
+  },
+  {
+    id: 'tx-seed-9',
+    categoryId: 'transporte',
+    amount: 22.50,
+    description: 'Taxi retorno nocturno',
+    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 94).toISOString(), // Hace 4 días
+  },
+  {
+    id: 'tx-seed-10',
+    categoryId: 'emergencias',
+    amount: 35.00,
+    description: 'Farmacia Inkafarma medicamentos',
+    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 98).toISOString(), // Hace 4 días
+  },
+  {
+    id: 'tx-seed-11',
+    categoryId: 'alimentacion',
+    amount: 48.00,
+    description: 'Panadería, frutas y lácteos',
+    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 118).toISOString(), // Hace 5 días
+  },
+  {
+    id: 'tx-seed-12',
+    categoryId: 'entretenimiento',
+    amount: 38.00,
+    description: 'Salida de café y postres',
+    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 140).toISOString(), // Hace 6 días
+  },
+  {
+    id: 'tx-seed-13',
+    categoryId: 'transporte',
+    amount: 16.00,
+    description: 'Movilidad semanal',
+    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 144).toISOString(), // Hace 6 días
   },
 ];

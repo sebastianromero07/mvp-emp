@@ -85,7 +85,7 @@ export function ResetModeModal({
                   </label>
                   <div className="relative w-32">
                     <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs font-mono font-bold text-slate-400">
-                      $
+                      S/
                     </span>
                     <input
                       id="seed-amount"
@@ -93,7 +93,7 @@ export function ResetModeModal({
                       value={customBalance}
                       onChange={(e) => setCustomBalance(e.target.value)}
                       placeholder="2270"
-                      className="w-full pl-6 pr-2.5 py-1 text-xs font-mono font-black rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500"
+                      className="w-full pl-7 pr-2.5 py-1 text-xs font-mono font-black rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500"
                     />
                   </div>
                 </div>

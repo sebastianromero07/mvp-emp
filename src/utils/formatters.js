@@ -1,11 +1,10 @@
 export function formatCurrency(amount) {
   const num = Number(amount) || 0;
-  return new Intl.NumberFormat('es-ES', {
-    style: 'currency',
-    currency: 'USD',
+  const formatted = new Intl.NumberFormat('es-PE', {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
-  }).format(num).replace('US$', '$').trim();
+  }).format(Math.abs(num));
+  return num < 0 ? `-S/ ${formatted}` : `S/ ${formatted}`;
 }
 
 export function formatDateTime(isoString) {
@@ -25,7 +24,7 @@ export function formatDateTime(isoString) {
     date.getMonth() === yesterday.getMonth() &&
     date.getFullYear() === yesterday.getFullYear();
 
-  const timeStr = date.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+  const timeStr = date.toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' });
 
   if (isToday) {
     return `Hoy, ${timeStr}`;
@@ -34,5 +33,5 @@ export function formatDateTime(isoString) {
     return `Ayer, ${timeStr}`;
   }
 
-  return `${date.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}, ${timeStr}`;
+  return `${date.toLocaleDateString('es-PE', { day: 'numeric', month: 'short' })}, ${timeStr}`;
 }

@@ -626,7 +626,7 @@ export function GoalsView({
 
                 <div>
                   <label className="block text-[10px] uppercase font-bold text-emerald-600 dark:text-emerald-400 mb-1">
-                    * ¿Cuál es tu Monto Objetivo? ($)
+                    * ¿Cuál es tu Monto Objetivo? (S/)
                   </label>
                   <input
                     type="number"
@@ -644,7 +644,7 @@ export function GoalsView({
 
               <div>
                 <label className="block text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 mb-1">
-                  Ahorro Inicial que ya tienes ($ - opcional)
+                  Ahorro Inicial que ya tienes (S/ - opcional)
                 </label>
                 <input
                   type="number"
@@ -774,32 +774,16 @@ export function GoalsView({
                     className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 pointer-events-none select-none"
                     loading="lazy"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/70 to-slate-950/30 pointer-events-none" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/80 to-slate-950/40 pointer-events-none" />
 
-                  {/* Card Content Top: Grip Handle, Badge and Delete */}
-                  <div className="relative z-10 p-4 flex items-start justify-between">
-                    <div className="flex items-center gap-1.5">
-                      <div
-                        data-drag-handle="true"
-                        title="Arrastrar para mover posición"
-                        className="p-1 rounded-lg bg-black/40 hover:bg-black/60 text-white/70 hover:text-white transition-colors cursor-grab active:cursor-grabbing backdrop-blur-md"
-                      >
-                        <GripVertical className="w-3.5 h-3.5" />
-                      </div>
-
-                      <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider backdrop-blur-md border shadow-xs ${isCompleted
-                        ? 'bg-emerald-500/90 text-white border-emerald-400'
-                        : 'bg-slate-900/80 text-emerald-400 border-emerald-500/30'
-                        }`}>
-                        {isCompleted ? (
-                          <>
-                            <CheckCircle2 className="w-3 h-3" />
-                            <span>Completado</span>
-                          </>
-                        ) : (
-                          <span>{progress.toFixed(0)}% Completado</span>
-                        )}
-                      </span>
+                  {/* Card Content Top: Grip Handle and Delete (no strategy pill outside) */}
+                  <div className="relative z-10 p-4 pb-2 flex items-start justify-between gap-2">
+                    <div
+                      data-drag-handle="true"
+                      title="Arrastrar para mover posición"
+                      className="p-1.5 rounded-xl bg-black/50 hover:bg-black/70 text-white/80 hover:text-white transition-colors cursor-grab active:cursor-grabbing backdrop-blur-md shrink-0"
+                    >
+                      <GripVertical className="w-4 h-4" />
                     </div>
 
                     <button
@@ -809,30 +793,30 @@ export function GoalsView({
                         onDeleteGoal(goal.id);
                       }}
                       title="Eliminar meta"
-                      className="p-1.5 rounded-full bg-slate-900/60 hover:bg-rose-950 text-slate-300 hover:text-rose-400 border border-white/10 transition-colors backdrop-blur-md shrink-0"
+                      className="p-2 rounded-full bg-slate-950/70 hover:bg-rose-950 text-slate-200 hover:text-rose-400 border border-white/15 transition-colors backdrop-blur-md shrink-0 cursor-pointer"
                     >
-                      <Trash2 className="w-3.5 h-3.5" />
+                      <Trash2 className="w-4 h-4" />
                     </button>
                   </div>
 
-                  {/* Card Content Bottom: Title, Progress Bar, Numbers & Deposit Action */}
-                  <div className="relative z-10 p-4 pt-0 space-y-2.5">
+                  {/* Card Content Bottom: Larger Typography, Progress Bar, Saved Amount (no target total outside) & Deposit Button */}
+                  <div className="relative z-10 p-4 pt-2 space-y-3">
                     <div>
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-slate-300/80 block">
+                      <span className="text-xs font-extrabold uppercase tracking-wider text-emerald-300 drop-shadow block mb-0.5">
                         {goal.term || 'Mediano plazo'}
                       </span>
-                      <h3 className="text-base sm:text-lg font-extrabold text-white tracking-tight drop-shadow-md truncate">
+                      <h3 className="text-lg sm:text-xl font-black text-white tracking-tight drop-shadow-md truncate leading-snug">
                         {goal.title}
                       </h3>
                       {goal.subtitle && (
-                        <p className="text-[11px] text-slate-300 truncate">
+                        <p className="text-xs sm:text-sm font-medium text-slate-200 drop-shadow truncate mt-0.5">
                           {goal.subtitle}
                         </p>
                       )}
                     </div>
 
                     {/* Progress Bar */}
-                    <div className="w-full h-2 rounded-full bg-black/50 backdrop-blur-md overflow-hidden p-0.5 border border-white/20">
+                    <div className="w-full h-2.5 rounded-full bg-black/60 backdrop-blur-md overflow-hidden p-0.5 border border-white/25">
                       <div
                         className={`h-full rounded-full transition-all duration-700 ease-out ${isCompleted
                           ? 'bg-emerald-400'
@@ -842,21 +826,24 @@ export function GoalsView({
                       />
                     </div>
 
-                    {/* Numbers and Action Button */}
-                    <div className="flex items-center justify-between pt-1">
-                      <div>
-                        <span className="text-base sm:text-lg font-mono font-extrabold text-white block leading-tight">
-                          {formatCurrency(goal.currentAmount)}
-                        </span>
-                        <span className="text-[10px] text-slate-300 font-mono">
-                          objetivo: {formatCurrency(goal.targetAmount)}
-                        </span>
-                      </div>
+                    {/* Numbers Row: Only saved amount & percentage outside */}
+                    <div className="flex items-center justify-between pt-0.5">
+                      <span className="text-xl sm:text-2xl font-mono font-black text-white leading-tight drop-shadow">
+                        {formatCurrency(goal.currentAmount)}
+                      </span>
 
+                      <span className="text-xs sm:text-sm font-mono font-black text-emerald-300 bg-black/50 px-2.5 py-1 rounded-xl border border-emerald-500/30">
+                        {progress.toFixed(0)}%
+                      </span>
+                    </div>
+
+                    {/* Bottom Position: Botón de Aportar */}
+                    <div className="pt-1">
                       {isCompleted ? (
-                        <span className="text-[11px] font-bold text-emerald-400 flex items-center gap-1">
-                          <CheckCircle2 className="w-3.5 h-3.5" /> ¡Meta lograda!
-                        </span>
+                        <div className="w-full py-2.5 px-4 rounded-2xl bg-emerald-500/90 text-slate-950 font-black text-xs sm:text-sm flex items-center justify-center gap-1.5 shadow-lg">
+                          <CheckCircle2 className="w-4 h-4 stroke-[2.5]" />
+                          <span>¡Meta Completada!</span>
+                        </div>
                       ) : (
                         <button
                           type="button"
@@ -864,29 +851,13 @@ export function GoalsView({
                             e.stopPropagation();
                             setDepositGoalId(goal.id);
                           }}
-                          className="px-3 py-1.5 rounded-xl bg-white/95 hover:bg-white text-slate-900 font-bold text-xs shadow-md active:scale-95 transition-all"
+                          className="w-full py-2.5 px-4 rounded-2xl bg-white hover:bg-emerald-50 text-slate-950 font-black text-xs sm:text-sm shadow-lg active:scale-95 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
                         >
-                          + Aportar
+                          <Plus className="w-4 h-4 stroke-[3]" />
+                          <span>Aportar</span>
                         </button>
                       )}
                     </div>
-
-                    {/* Pastilla en la parte de abajo de cada casilla SOLO SI se definió el método */}
-                    {goal.strategy ? (
-                      <div className="pt-2 flex items-center">
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setStrategyGoal(goal);
-                          }}
-                          className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] sm:text-[11px] font-extrabold bg-emerald-500/25 hover:bg-emerald-500/35 text-emerald-300 border border-emerald-500/35 backdrop-blur-md shadow-xs active:scale-95 transition-all cursor-pointer"
-                        >
-                          <TrendingUp className="w-3 h-3 text-emerald-400" />
-                          <span>{goal.strategy}</span>
-                        </button>
-                      </div>
-                    ) : null}
                   </div>
                 </div>
               );
@@ -896,36 +867,82 @@ export function GoalsView({
       </section>
 
       {/* ========================================================= */}
-      {/* MODAL: ¿CÓMO CUMPLIR TU OBJETIVO? (ELECCIÓN DENTRO DE LA CAJA) */}
+      {/* MODAL: DETALLE DE OBJETIVO (MONTO OBJETIVO ARRIBA + SECCIÓN MÉTODO) */}
       {/* ========================================================= */}
-      {strategyGoal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fade-in">
-          <div className="w-full max-w-md rounded-3xl bg-slate-900 border border-slate-800 p-5 sm:p-6 shadow-2xl space-y-4 text-white relative animate-scale-up">
-            {/* Header */}
-            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
-              <div>
-                <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-400 block">
-                  {strategyGoal.title}
-                </span>
-                <h3 className="text-base sm:text-lg font-extrabold text-white tracking-tight flex items-center gap-1.5">
-                  <TrendingUp className="w-4 h-4 text-emerald-400" />
-                  <span>¿Cómo cumplir tu objetivo?</span>
-                </h3>
-                <p className="text-xs text-slate-400 mt-0.5">
-                  Elige el método o instrumento financiero para esta meta.
-                </p>
+      {strategyGoal && (() => {
+        const modalProgress = strategyGoal.targetAmount > 0
+          ? (strategyGoal.currentAmount / strategyGoal.targetAmount) * 100
+          : 0;
+        return (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fade-in">
+            <div className="w-full max-w-md rounded-3xl bg-slate-900 border border-slate-800 p-5 sm:p-6 shadow-2xl space-y-4 text-white relative animate-scale-up max-h-[90vh] overflow-y-auto no-scrollbar">
+              {/* Header */}
+              <div className="flex items-start justify-between gap-2 pb-3 border-b border-slate-800">
+                <div>
+                  <span className="text-[11px] font-extrabold uppercase tracking-wider text-emerald-400 block">
+                    {strategyGoal.term || 'Objetivo Financiero'}
+                  </span>
+                  <h3 className="text-lg sm:text-xl font-black text-white tracking-tight mt-0.5">
+                    {strategyGoal.title}
+                  </h3>
+                  {strategyGoal.subtitle && (
+                    <p className="text-xs text-slate-400 mt-0.5">
+                      {strategyGoal.subtitle}
+                    </p>
+                  )}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setStrategyGoal(null)}
+                  className="p-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white transition-all cursor-pointer shrink-0"
+                >
+                  <X className="w-5 h-5" />
+                </button>
               </div>
-              <button
-                type="button"
-                onClick={() => setStrategyGoal(null)}
-                className="p-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white transition-all cursor-pointer"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
 
-            {/* Choices List */}
-            <div className="space-y-2 max-h-[60vh] overflow-y-auto no-scrollbar pr-0.5">
+              {/* PRIMER LUGAR: Total Monto Objetivo y Avance */}
+              <div className="p-4 rounded-2xl bg-slate-950/80 border border-emerald-500/30 space-y-2.5">
+                <div className="flex items-baseline justify-between gap-2">
+                  <div>
+                    <span className="text-[11px] font-extrabold uppercase tracking-wider text-slate-400 block">
+                      Monto Objetivo Total
+                    </span>
+                    <span className="text-2xl sm:text-3xl font-black font-mono text-white">
+                      {formatCurrency(strategyGoal.targetAmount)}
+                    </span>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-[11px] font-bold text-slate-400 block">
+                      Ahorrado
+                    </span>
+                    <span className="text-sm sm:text-base font-extrabold font-mono text-emerald-400">
+                      {formatCurrency(strategyGoal.currentAmount)} ({modalProgress.toFixed(0)}%)
+                    </span>
+                  </div>
+                </div>
+
+                <div className="w-full h-2.5 rounded-full bg-slate-800 overflow-hidden">
+                  <div
+                    className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-cyan-400 transition-all duration-500"
+                    style={{ width: `${Math.min(100, Math.max(0, modalProgress))}%` }}
+                  />
+                </div>
+              </div>
+
+              {/* SECCIÓN: ¿Cómo cumplir tu objetivo? */}
+              <div className="space-y-2.5 pt-1">
+                <div>
+                  <h4 className="text-sm sm:text-base font-extrabold text-white tracking-tight flex items-center gap-1.5">
+                    <TrendingUp className="w-4 h-4 text-emerald-400" />
+                    <span>¿Cómo cumplir tu objetivo?</span>
+                  </h4>
+                  <p className="text-xs text-slate-400 mt-0.5">
+                    Elige el método o instrumento financiero para esta meta.
+                  </p>
+                </div>
+
+                {/* Choices List */}
+                <div className="space-y-2 max-h-[42vh] overflow-y-auto no-scrollbar pr-0.5">
               {INVESTMENT_STRATEGIES.map((strategy) => {
                 const isSelected = strategyGoal.strategy === strategy;
                 const details = STRATEGY_DETAILS[strategy] || {};
@@ -970,6 +987,7 @@ export function GoalsView({
                 );
               })}
             </div>
+            </div>
 
             {/* Transient Feedback Banner: Aparece y desaparece casi al instante */}
             {feedbackNotification && feedbackNotification.goalId === strategyGoal.id && (
@@ -982,7 +1000,7 @@ export function GoalsView({
             )}
           </div>
         </div>
-      )}
+      ); })()}
 
       {/* Quick Deposit Modal */}
       {depositGoalId && (
@@ -998,8 +1016,8 @@ export function GoalsView({
             </div>
 
             <div className="relative rounded-2xl bg-slate-100 dark:bg-slate-950 border border-slate-300 dark:border-slate-700">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xl font-bold font-mono text-slate-400">
-                $
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-base font-extrabold font-mono text-slate-400">
+                S/
               </span>
               <input
                 type="number"
@@ -1009,7 +1027,7 @@ export function GoalsView({
                 value={depositAmount}
                 onChange={(e) => setDepositAmount(e.target.value)}
                 placeholder="0.00"
-                className="w-full bg-transparent pl-8 pr-3 py-2.5 text-lg font-mono font-bold text-slate-900 dark:text-white focus:outline-none"
+                className="w-full bg-transparent pl-9 pr-3 py-2.5 text-lg font-mono font-bold text-slate-900 dark:text-white focus:outline-none"
               />
             </div>
 
@@ -1025,7 +1043,7 @@ export function GoalsView({
                   }}
                   className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold font-mono active:scale-95 border border-slate-200 dark:border-slate-700"
                 >
-                  +${v}
+                  +S/{v}
                 </button>
               ))}
             </div>

@@ -95,7 +95,7 @@ export default function App() {
   const handleCreatePocket = (pocketData) => {
     try {
       const newPocket = createPocket(pocketData);
-      showToast(`Bolsillo "${newPocket.name}" creado con éxito ($${pocketData.budget.toFixed(2)}). Se restó de tu Saldo Total.`, 'success');
+      showToast(`Bolsillo "${newPocket.name}" creado con éxito (S/ ${pocketData.budget.toFixed(2)}). Se restó de tu Saldo Total.`, 'success');
     } catch (err) {
       showToast(err.message, 'error');
     }
@@ -105,7 +105,7 @@ export default function App() {
     try {
       addExpense({ categoryId, amount, description });
       const cat = categories.find((c) => c.id === categoryId);
-      showToast(`Gasto de $${amount.toFixed(2)} registrado en ${cat ? cat.name : 'Espacio'}.`, 'success');
+      showToast(`Gasto de S/ ${amount.toFixed(2)} registrado en ${cat ? cat.name : 'Espacio'}.`, 'success');
     } catch (err) {
       showToast(err.message, 'error');
     }
@@ -115,7 +115,7 @@ export default function App() {
     const deleted = deleteExpense(id);
     if (deleted) {
       const cat = categories.find((c) => c.id === deleted.categoryId);
-      showToast(`Gasto de $${deleted.amount.toFixed(2)} eliminado y saldo restaurado en ${cat ? cat.name : 'su espacio'}.`, 'info');
+      showToast(`Gasto de S/ ${deleted.amount.toFixed(2)} eliminado y saldo restaurado en ${cat ? cat.name : 'su espacio'}.`, 'info');
     }
   };
 
@@ -131,7 +131,7 @@ export default function App() {
   const handleDepositToGoal = (goalId, amount) => {
     try {
       depositToGoal(goalId, amount);
-      showToast(`Se sumaron $${amount.toFixed(2)} a tu meta.`, 'success');
+      showToast(`Se sumaron S/ ${amount.toFixed(2)} a tu meta.`, 'success');
     } catch (err) {
       showToast(err.message, 'error');
     }
@@ -359,7 +359,7 @@ export default function App() {
         onSelectSeedMode={(amount) => {
           resetToSeedMode(amount);
           setSelectedPocketId(null);
-          showToast(`Modo Semilla iniciado: Saldo Total disponible $${amount.toFixed(2)}.`, 'success');
+          showToast(`Modo Semilla iniciado: Saldo Total disponible S/ ${amount.toFixed(2)}.`, 'success');
         }}
         onSelectDemoMode={() => {
           resetToDemoMode();
@@ -394,7 +394,7 @@ export default function App() {
         currentBudgets={budgets}
         categories={categories}
         onSaveBudgets={handleSaveBudgets}
-        onResetToDemo={handleResetDemo}
+        onResetToDemo={() => setIsResetModeOpen(true)}
       />
 
       {/* Floating Feedback Toast */}
